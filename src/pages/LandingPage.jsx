@@ -94,7 +94,7 @@ const TRUST_PILLARS = [
     rq: 'RQ1',
   },
   {
-    icon: 'fa-solid fa-circle-nodes',
+    icon: 'fa-solid fa-gem',
     title: 'Trust Orb',
     desc: 'Visual reputation scores aggregated from structured, attribute-based reviews.',
     gradient: 'linear-gradient(135deg, #6A0DAD, #C77DFF)',
