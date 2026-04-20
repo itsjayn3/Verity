@@ -124,7 +124,7 @@ export default function AuthPage() {
                 desc: 'Every user is a real Aston student — no anonymous accounts, no strangers.',
               },
               {
-                icon: 'fa-solid fa-circle-nodes',
+                icon: 'fa-solid fa-gem',
                 title: 'Trust Orb',
                 desc: 'Visual reputation scores built from structured, attribute-based reviews.',
               },
