@@ -1,109 +1,444 @@
-// src/pages/LandingPage.jsx
-import React from "react";
-import { useNavigate } from "react-router-dom";
+// LandingPage.jsx
+// First impression — sets up the three trust pillars (RQ1, RQ2, RQ3)
+// Includes scroll-triggered fade animations via Intersection Observer
 
-const LandingPage = () => {
+import { useNavigate } from 'react-router-dom';
+import { useEffect } from 'react';
+
+// ── Scroll animation hook ─────────────────────────────────────────────────────
+function useScrollReveal() {
+  useEffect(() => {
+    const style = document.createElement('style');
+    style.textContent = `
+      .reveal {
+        opacity: 0;
+        transform: translateY(32px);
+        transition: opacity 0.7s ease, transform 0.7s ease;
+      }
+      .reveal.visible {
+        opacity: 1;
+        transform: translateY(0);
+      }
+      .reveal-left {
+        opacity: 0;
+        transform: translateX(-32px);
+        transition: opacity 0.7s ease, transform 0.7s ease;
+      }
+      .reveal-left.visible {
+        opacity: 1;
+        transform: translateX(0);
+      }
+      .reveal-right {
+        opacity: 0;
+        transform: translateX(32px);
+        transition: opacity 0.7s ease, transform 0.7s ease;
+      }
+      .reveal-right.visible {
+        opacity: 1;
+        transform: translateX(0);
+      }
+      .stagger-1 { transition-delay: 0.1s; }
+      .stagger-2 { transition-delay: 0.2s; }
+      .stagger-3 { transition-delay: 0.3s; }
+      .stagger-4 { transition-delay: 0.4s; }
+
+      @keyframes float {
+        0%, 100% { transform: translateY(0px); }
+        50% { transform: translateY(-10px); }
+      }
+      .float { animation: float 4s ease-in-out infinite; }
+      .float-delayed { animation: float 4s ease-in-out 1s infinite; }
+
+      @keyframes gradientShift {
+        0% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
+        100% { background-position: 0% 50%; }
+      }
+      .gradient-animate {
+        background-size: 200% 200%;
+        animation: gradientShift 6s ease infinite;
+      }
+    `;
+    document.head.appendChild(style);
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('visible');
+          }
+        });
+      },
+      { threshold: 0.1 }
+    );
+
+    const elements = document.querySelectorAll('.reveal, .reveal-left, .reveal-right');
+    elements.forEach((el) => observer.observe(el));
+
+    return () => {
+      observer.disconnect();
+      if (document.head.contains(style)) {
+        document.head.removeChild(style);
+      }
+    };
+  }, []);
+}
+
+// ── Data ──────────────────────────────────────────────────────────────────────
+const TRUST_PILLARS = [
+  {
+    icon: 'fa-solid fa-shield-halved',
+    title: 'Verified Identities',
+    desc: 'Every member is verified through their @aston.ac.uk email — no anonymous accounts.',
+    gradient: 'linear-gradient(135deg, #0047AB, #00D4FF)',
+    rq: 'RQ1',
+  },
+  {
+    icon: 'fa-solid fa-circle-nodes',
+    title: 'Trust Orb',
+    desc: 'Visual reputation scores aggregated from structured, attribute-based reviews.',
+    gradient: 'linear-gradient(135deg, #6A0DAD, #C77DFF)',
+    rq: 'RQ2',
+  },
+  {
+    icon: 'fa-solid fa-star-half-stroke',
+    title: 'Structured Reviews',
+    desc: 'Ratings for punctuality, quality, and communication — not vague free-text feedback.',
+    gradient: 'linear-gradient(135deg, #00B4D8, #0047AB)',
+    rq: 'RQ3',
+  },
+];
+
+const HOW_IT_WORKS = [
+  {
+    step: '01',
+    icon: 'fa-solid fa-envelope-circle-check',
+    title: 'Verify your identity',
+    desc: 'Sign up with your @aston.ac.uk email. Your account is confirmed before you can access anything.',
+    gradient: 'linear-gradient(135deg, #0047AB, #00D4FF)',
+  },
+  {
+    step: '02',
+    icon: 'fa-solid fa-id-card',
+    title: 'Build your profile',
+    desc: 'Add your skills, bio, year of study, and contact links. Your profile is your verified campus identity.',
+    gradient: 'linear-gradient(135deg, #6A0DAD, #C77DFF)',
+  },
+  {
+    step: '03',
+    icon: 'fa-solid fa-magnifying-glass',
+    title: 'Browse the Campus Feed',
+    desc: 'Discover services from verified students. Filter by location — public zones, student living, or remote.',
+    gradient: 'linear-gradient(135deg, #00B4D8, #0047AB)',
+  },
+  {
+    step: '04',
+    icon: 'fa-solid fa-circle-nodes',
+    title: 'Evaluate with the Trust Orb',
+    desc: 'View any student\'s Trust Orb — an aggregated visual of their punctuality, quality, and communication.',
+    gradient: 'linear-gradient(135deg, #0047AB, #6A0DAD)',
+  },
+];
+
+// ── Page ─────────────────────────────────────────────────────────────────────
+export default function LandingPage() {
   const navigate = useNavigate();
-
-  // New student verification button
-  const handleVerify = () => {
-    navigate("/auth"); // uses your AuthPage route
-  };
-
-  // Returning users sign in
-  const handleSignIn = () => {
-    navigate("/auth"); // same AuthPage
-  };
-
-  // View portfolio / profile preview
-  const handleViewPortfolio = () => {
-    navigate("/complete-profile"); // protected page
-  };
+  useScrollReveal();
 
   return (
-    <div className="bg-black text-white">
-      {/* Header */}
-      <div className="fixed top-0 left-0 right-0 z-50 bg-white bg-opacity-15 backdrop-blur-xl border-b border-white border-opacity-20">
+    <div className="min-h-screen overflow-x-hidden">
+
+      {/* ── Header ── */}
+      <header
+        className="fixed top-0 left-0 right-0 z-50 border-b border-white/20"
+        style={{ background: 'rgba(255,255,255,0.08)', backdropFilter: 'blur(20px)' }}
+      >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
-            <h1 className="text-2xl text-white tracking-wide">VERITY</h1>
-            <nav className="hidden md:flex space-x-8">
-              <a href="#" className="hover:text-opacity-100 transition-all">Home</a>
-              <a href="#" className="hover:text-opacity-100 transition-all">Services</a>
-              <a href="#" className="hover:text-opacity-100 transition-all">About</a>
-              <a href="#" className="hover:text-opacity-100 transition-all">Contact</a>
-            </nav>
+            <h1 className="text-2xl text-white tracking-widest font-light">VERITY</h1>
+            <button
+              onClick={() => navigate('/auth')}
+              className="px-5 py-2 text-white text-sm rounded-full border border-white/30 hover:bg-white/10 transition-all"
+            >
+              Sign In
+            </button>
           </div>
         </div>
-      </div>
+      </header>
 
-      {/* Hero Section */}
-      <section className="relative h-[700px] bg-gradient-to-br from-[#0047AB] via-[#6A0DAD] to-[#000000] flex items-center justify-center overflow-hidden">
+      {/* ── Hero ── */}
+      <section
+        className="relative min-h-screen flex items-center justify-center overflow-hidden"
+        style={{
+          background: 'linear-gradient(135deg, #0047AB 0%, #6A0DAD 50%, #000000 100%)',
+        }}
+      >
+        <div className="absolute inset-0 pointer-events-none"
+          style={{ background: 'radial-gradient(ellipse at top right, rgba(0,71,171,0.4), transparent 50%)' }} />
+        <div className="absolute inset-0 pointer-events-none"
+          style={{ background: 'radial-gradient(ellipse at bottom left, rgba(106,13,173,0.4), transparent 50%)' }} />
+
         <div className="relative z-10 text-center max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h1 className="text-6xl sm:text-7xl lg:text-8xl text-white mb-6 leading-tight tracking-tight">
-            Welcome to Verity.
+
+          <div className="inline-flex items-center gap-2 bg-white/10 border border-white/20 rounded-full px-5 py-2 mb-8 backdrop-blur-sm">
+            <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
+            <span className="text-white/80 text-sm tracking-wide">
+              Aston University · Verified Access Only
+            </span>
+          </div>
+
+          <h1
+            className="text-6xl sm:text-7xl lg:text-8xl font-light mb-6 leading-tight tracking-tight gradient-animate"
+            style={{
+              background: 'linear-gradient(135deg, #ffffff, #a78bfa, #60a5fa, #ffffff)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              backgroundClip: 'text',
+            }}
+          >
+            Welcome to<br />Verity.
           </h1>
-          <p className="text-xl sm:text-2xl text-white text-opacity-90 mb-12 max-w-2xl mx-auto">
-            The exclusive service exchange for your campus community.
+
+          <p className="text-xl text-white/80 mb-4 max-w-xl mx-auto">
+            Campus services, built on trust.
           </p>
+
+          <div className="flex items-center justify-center gap-6 mb-12">
+            {['Verified', 'Reviewed', 'Trusted'].map((word, i) => (
+              <div key={word} className="flex items-center gap-6">
+                <span className="text-white/60 text-sm tracking-widest uppercase">{word}</span>
+                {i < 2 && <span className="text-white/20">·</span>}
+              </div>
+            ))}
+          </div>
+
           <button
-            onClick={handleVerify}
-            className="px-12 py-5 bg-gradient-to-r from-[#0047AB] via-[#00B4D8] to-[#00D4FF] text-white rounded-full text-lg hover:shadow-2xl hover:shadow-neutral-500/50 transition-all transform hover:scale-105"
+            onClick={() => navigate('/auth')}
+            className="px-12 py-5 text-white rounded-full text-lg font-medium hover:shadow-2xl hover:scale-105 transition-all gradient-animate"
+            style={{ background: 'linear-gradient(135deg, #0047AB, #6A0DAD, #0047AB)' }}
           >
             Verify with @aston.ac.uk
+          </button>
+
+          <p className="text-white/40 text-xs mt-4">
+            Exclusively for verified Aston University students
+          </p>
+        </div>
+
+        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 animate-bounce">
+          <i className="fa-solid fa-chevron-down text-white/30 text-sm" />
+        </div>
+      </section>
+
+      {/* ── How It Works ── */}
+      <section
+        className="relative py-24 px-4 sm:px-6 lg:px-8"
+        style={{
+          background: 'linear-gradient(180deg, #000000 0%, #0a0a1a 50%, #0047AB 100%)',
+        }}
+      >
+        <div className="max-w-5xl mx-auto">
+          <div className="text-center mb-16 reveal">
+            <span className="text-white/40 text-xs uppercase tracking-widest mb-3 block">
+              Simple by design
+            </span>
+            <h2 className="text-4xl sm:text-5xl text-white font-light mb-4">
+              How Verity works
+            </h2>
+            <p className="text-white/50 text-sm max-w-md mx-auto">
+              From sign-up to trusted service discovery in four steps.
+            </p>
+          </div>
+
+          <div className="grid sm:grid-cols-2 gap-6">
+            {HOW_IT_WORKS.map(({ step, icon, title, desc, gradient }, i) => (
+              <div key={step} className={`reveal stagger-${i + 1}`}>
+                <div
+                  className="relative rounded-3xl p-8 border border-white/10 hover:border-white/25 transition-all h-full"
+                  style={{ background: 'rgba(255,255,255,0.04)', backdropFilter: 'blur(12px)' }}
+                >
+                  <div className="flex items-start gap-5">
+                    <div className="flex-shrink-0">
+                      <div
+                        className="w-12 h-12 rounded-2xl flex items-center justify-center shadow-lg"
+                        style={{ background: gradient }}
+                      >
+                        <i className={`${icon} text-white text-lg`} />
+                      </div>
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-3 mb-2">
+                        <span className="text-white/25 text-xs font-mono">{step}</span>
+                        <h3 className="text-white font-medium text-base">{title}</h3>
+                      </div>
+                      <p className="text-white/55 text-sm leading-relaxed">{desc}</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── CTA Cards ── */}
+      <section
+        className="relative py-24 px-4 sm:px-6 lg:px-8"
+        style={{
+          background: 'linear-gradient(135deg, #0047AB 0%, #6A0DAD 50%, #00CAF3 100%)',
+        }}
+      >
+        <div className="absolute top-20 left-10 w-96 h-96 rounded-full opacity-10 blur-3xl pointer-events-none"
+          style={{ background: 'white' }} />
+        <div className="absolute bottom-20 right-10 w-96 h-96 rounded-full opacity-10 blur-3xl pointer-events-none"
+          style={{ background: 'white' }} />
+
+        <div className="max-w-4xl mx-auto relative z-10">
+          <div className="text-center mb-12 reveal">
+            <h2 className="text-4xl text-white font-light">Ready to get started?</h2>
+          </div>
+          <div className="grid md:grid-cols-2 gap-6">
+
+            <div className="relative group reveal-left">
+              <div
+                className="absolute inset-0 rounded-3xl opacity-30 blur-xl group-hover:opacity-50 transition-opacity pointer-events-none"
+                style={{ background: 'linear-gradient(135deg, #0047AB, #00D4FF)' }}
+              />
+              <div
+                className="relative rounded-3xl p-10 border border-white/20 hover:border-white/40 transition-all"
+                style={{ background: 'rgba(255,255,255,0.08)', backdropFilter: 'blur(20px)' }}
+              >
+                <div className="text-center">
+                  <div
+                    className="w-16 h-16 rounded-full mx-auto mb-6 flex items-center justify-center shadow-lg float"
+                    style={{ background: 'linear-gradient(135deg, #0047AB, #00D4FF)' }}
+                  >
+                    <i className="fa-solid fa-user-plus text-white text-2xl" />
+                  </div>
+                  <h3 className="text-2xl text-white font-light mb-3">New Students</h3>
+                  <p className="text-white/70 mb-8 text-sm leading-relaxed">
+                    Join the verified campus community. Share your skills and connect with peers you can trust.
+                  </p>
+                  <button
+                    onClick={() => navigate('/auth')}
+                    className="w-full py-4 text-white rounded-full font-medium hover:scale-105 transition-all text-sm"
+                    style={{ background: 'linear-gradient(135deg, #0047AB, #00D4FF)' }}
+                  >
+                    Verify with @aston.ac.uk
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div className="relative group reveal-right">
+              <div
+                className="absolute inset-0 rounded-3xl opacity-20 blur-xl group-hover:opacity-40 transition-opacity pointer-events-none"
+                style={{ background: 'linear-gradient(135deg, #6A0DAD, #C77DFF)' }}
+              />
+              <div
+                className="relative rounded-3xl p-10 border border-white/20 hover:border-white/40 transition-all"
+                style={{ background: 'rgba(255,255,255,0.08)', backdropFilter: 'blur(20px)' }}
+              >
+                <div className="text-center">
+                  <div
+                    className="w-16 h-16 rounded-full mx-auto mb-6 flex items-center justify-center border border-white/30 float-delayed"
+                    style={{ background: 'rgba(255,255,255,0.1)' }}
+                  >
+                    <i className="fa-solid fa-arrow-right-to-bracket text-white text-2xl" />
+                  </div>
+                  <h3 className="text-2xl text-white font-light mb-3">Returning Users</h3>
+                  <p className="text-white/70 mb-8 text-sm leading-relaxed">
+                    Welcome back. Access your profile, browse services, and manage your reputation.
+                  </p>
+                  <button
+                    onClick={() => navigate('/auth')}
+                    className="w-full py-4 text-white rounded-full font-medium border-2 border-white/40 hover:bg-white/10 transition-all text-sm"
+                  >
+                    Sign In
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── Why Students Trust Verity ── */}
+      <section
+        className="relative py-24 px-4 sm:px-6 lg:px-8"
+        style={{
+          background: 'linear-gradient(180deg, #0047AB 0%, #1a1a2e 50%, #000000 100%)',
+        }}
+      >
+        <div className="max-w-5xl mx-auto relative z-10">
+          <div className="text-center mb-16 reveal">
+            <h2 className="text-4xl sm:text-5xl text-white font-light mb-4">
+              Why Students Trust Verity
+            </h2>
+            <p className="text-white/50 text-sm max-w-md mx-auto">
+              Three mechanisms working together to reduce uncertainty in campus service exchange.
+            </p>
+          </div>
+
+          <div className="grid sm:grid-cols-3 gap-6">
+            {TRUST_PILLARS.map(({ icon, title, desc, gradient, rq }, i) => (
+              <div key={title} className={`relative group reveal stagger-${i + 1}`}>
+                <div
+                  className="relative rounded-3xl p-8 border border-white/10 hover:border-white/25 transition-all h-full"
+                  style={{ background: 'rgba(255,255,255,0.05)', backdropFilter: 'blur(12px)' }}
+                >
+                  <div className="absolute top-4 right-4">
+                    <span className="text-white/20 text-xs font-mono">{rq}</span>
+                  </div>
+                  <div
+                    className="w-14 h-14 rounded-2xl mx-auto mb-6 flex items-center justify-center shadow-lg"
+                    style={{ background: gradient }}
+                  >
+                    <i className={`${icon} text-white text-xl`} />
+                  </div>
+                  <h3 className="text-lg text-white font-medium mb-3 text-center">{title}</h3>
+                  <p className="text-white/60 text-sm leading-relaxed text-center">{desc}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── Final CTA ── */}
+      <section
+        className="relative py-24 px-4 sm:px-6 lg:px-8"
+        style={{ background: 'linear-gradient(180deg, #000000 0%, #0a0a1a 100%)' }}
+      >
+        <div className="max-w-2xl mx-auto text-center relative z-10 reveal">
+          <h2 className="text-4xl text-white font-light mb-4">Ready to join?</h2>
+          <p className="text-white/50 text-sm mb-8">
+            Verify your Aston identity and start building your trusted campus reputation.
+          </p>
+          <button
+            onClick={() => navigate('/auth')}
+            className="px-12 py-4 text-white rounded-full font-medium hover:shadow-2xl hover:scale-105 transition-all gradient-animate"
+            style={{ background: 'linear-gradient(135deg, #0047AB, #6A0DAD, #0047AB)' }}
+          >
+            Get Started
           </button>
         </div>
       </section>
 
-      {/* CTA Cards */}
-      <section className="relative py-24 px-4 sm:px-6 lg:px-8 bg-gradient-to-b from-[#000000] via-[#1a0a2e] to-[#0047AB]">
-        <div className="max-w-6xl mx-auto relative z-10 grid md:grid-cols-2 gap-8">
-          {/* New Students */}
-          <div className="relative group bg-white bg-opacity-10 backdrop-blur-2xl border border-neutral-300 border-opacity-60 rounded-3xl p-10 shadow-2xl hover:shadow-neutral-500/30 transition-all">
-            <div className="text-center">
-              <h3 className="text-3xl text-white mb-4">New Students</h3>
-              <p className="text-white text-opacity-80 mb-10 leading-relaxed text-lg">
-                Join a verified community of students. Share your skills, discover services, and connect with peers on campus.
-              </p>
-              <button
-                onClick={handleVerify}
-                className="w-full py-4 bg-gradient-to-r from-[#0047AB] via-[#00B4D8] to-[#00D4FF] text-white rounded-full hover:shadow-xl hover:shadow-neutral-500/50 transition-all transform hover:scale-105 text-lg"
-              >
-                Verify with @aston.ac.uk
-              </button>
-            </div>
-          </div>
-
-          {/* Returning Users */}
-          <div className="relative group bg-white bg-opacity-10 backdrop-blur-2xl border border-white border-opacity-30 rounded-3xl p-10 shadow-2xl hover:shadow-neutral-500/20 transition-all">
-            <div className="text-center">
-              <h3 className="text-3xl text-white mb-4">Returning Users</h3>
-              <p className="text-white text-opacity-80 mb-10 leading-relaxed text-lg">
-                Welcome back to Verity. Access your profile, manage services, and continue building connections.
-              </p>
-              <button
-                onClick={handleSignIn}
-                className="w-full py-4 border-2 border-white text-white rounded-full hover:bg-white hover:bg-opacity-20 transition-all text-lg"
-              >
-                Sign In
-              </button>
-            </div>
+      {/* ── Footer ── */}
+      <footer className="py-8 px-4 border-t border-white/10" style={{ background: '#0a0a0a' }}>
+        <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
+          <p className="text-white/20 text-xs">© 2025 Verity · Aston University</p>
+          <div className="flex gap-6">
+            {['Privacy', 'Terms', 'Contact'].map((link) => (
+              <a key={link} href="#" className="text-white/30 text-xs hover:text-white/60 transition-colors">
+                {link}
+              </a>
+            ))}
           </div>
         </div>
-      </section>
+      </footer>
 
-      {/* Profile Preview */}
-      <section className="relative py-24 px-4 sm:px-6 lg:px-8 bg-gradient-to-b from-[#000000] via-[#0a0a1a] to-[#0047AB] text-center">
-        <h2 className="text-5xl text-white mb-8">Your Verified Profile</h2>
-        <button
-          onClick={handleViewPortfolio}
-          className="px-10 py-4 bg-gradient-to-r from-[#C77DFF] via-[#9D4EDD] to-[#6A0DAD] text-white rounded-full hover:shadow-xl hover:shadow-neutral-500/50 transition-all text-lg"
-        >
-          View Portfolio
-        </button>
-      </section>
     </div>
   );
-};
-
-export default LandingPage;
+}
