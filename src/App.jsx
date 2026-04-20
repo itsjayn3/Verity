@@ -4,6 +4,8 @@ import AuthPage from "./pages/AuthPage";
 import CompleteProfile from "./pages/CompleteProfile";
 import ServicesPage from "./pages/SearchPage";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
+import ProfilePage from "./pages/ProfilePage";
+
 
 export default function App() {
   return (
@@ -34,6 +36,15 @@ export default function App() {
             </ProtectedRoute>
           }
         />
+        {/* profile page */}
+        <Route
+          path="/profile/:id"
+          element={
+            <ProtectedRoute>
+              <ProfilePage />
+            </ProtectedRoute>
+            }
+          />
 
         {/* Fallback */}
         <Route path="*" element={<Navigate to="/" replace />} />
