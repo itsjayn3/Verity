@@ -1,3 +1,6 @@
+import { useNavigate } from 'react-router-dom';
+
+
 export default function ServiceCard({ service }) {
   const {
     title,
@@ -8,6 +11,12 @@ export default function ServiceCard({ service }) {
     meta = [],
     location,
   } = service;
+
+  const navigate = useNavigate();
+
+<button onClick={() => navigate(`/profile/${service.id}`)}>
+  View Profile
+</button>
 
   return (
     <div className="bg-neutral-100 rounded-2xl overflow-hidden hover:shadow-2xl transition-all border border-neutral-300 flex flex-col">
