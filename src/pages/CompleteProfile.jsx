@@ -1,3 +1,4 @@
+// CompleteProfile.jsx
 // New user profile setup — saves to Supabase profiles table
 // Triggered after first login when no profile exists
 
@@ -5,6 +6,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Header from '../components/layout/Header';
 import { supabase } from '../supabaseClient';
+import heic2any from 'heic2any';
 
 const SUGGESTED_SKILLS = [
   'Tutoring', 'Design', 'Photography', 'Coding', 'Hair & Braiding',
@@ -65,32 +67,36 @@ export default function CompleteProfile() {
   };
 
   const handleAvatarChange = async (e) => {
-  const file = e.target.files[0];
-  if (!file || !userId) return;
+    let file = e.target.files[0];
+    if (!file) return;
 
-  // Show local preview immediately
-  setAvatarPreview(URL.createObjectURL(file));
+    // Convert HEIC to JPEG if needed (iPhone photos)
+    if (file.type === 'image/heic' || file.name.toLowerCase().endsWith('.heic')) {
+      try {
+        const converted = await heic2any({ blob: file, toType: 'image/jpeg', quality: 0.8 });
+        file = new File([converted], file.name.replace('.heic', '.jpg'), { type: 'image/jpeg' });
+      } catch (err) {
+        setError('Could not convert image. Please upload a JPG or PNG.');
+        return;
+      }
+    }
 
-  // Upload to Supabase Storage
-  const fileExt = file.name.split('.').pop();
-  const filePath = `${userId}.${fileExt}`;
+    setAvatarPreview(URL.createObjectURL(file));
 
-  const { error: uploadError } = await supabase.storage
-    .from('avatars')
-    .upload(filePath, file, { upsert: true });
-
-  if (uploadError) {
-    console.error('Upload error:', uploadError);
-    return;
-  }
-
-  // Get the real public URL and save it
-  const { data } = supabase.storage
-    .from('avatars')
-    .getPublicUrl(filePath);
-
-  setAvatarPreview(data.publicUrl);
-};
+    if (userId) {
+      const fileExt = file.name.split('.').pop();
+      const filePath = `${userId}.${fileExt}`;
+      const { error: uploadError } = await supabase.storage
+        .from('avatars')
+        .upload(filePath, file, { upsert: true });
+      if (!uploadError) {
+        const { data } = supabase.storage.from('avatars').getPublicUrl(filePath);
+        setAvatarPreview(data.publicUrl);
+      } else {
+        setError('Failed to upload image: ' + uploadError.message);
+      }
+    }
+  };
 
   const handleSubmit = async () => {
     if (!agreed) return;

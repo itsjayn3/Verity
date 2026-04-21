@@ -8,6 +8,7 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
 import Header from '../components/layout/Header';
 import TrustOrb from '../components/profile/TrustOrb';
+import heic2any from 'heic2any';
 
 const YEAR_OPTIONS = ['1st Year', '2nd Year', '3rd Year', '4th Year', '5th Year', 'Postgrad'];
 
@@ -108,8 +109,19 @@ export default function ProfileSettings() {
 
   // ── Avatar ──
   const handleAvatarChange = async (e) => {
-    const file = e.target.files[0];
+    let file = e.target.files[0];
     if (!file || !userId) return;
+
+    // Convert HEIC to JPEG if needed (iPhone photos)
+    if (file.type === 'image/heic' || file.name.toLowerCase().endsWith('.heic')) {
+      try {
+        const converted = await heic2any({ blob: file, toType: 'image/jpeg', quality: 0.8 });
+        file = new File([converted], file.name.replace('.heic', '.jpg'), { type: 'image/jpeg' });
+      } catch (err) {
+        setError('Could not convert image. Please upload a JPG or PNG.');
+        return;
+      }
+    }
 
     // Show local preview immediately
     setAvatarPreview(URL.createObjectURL(file));
