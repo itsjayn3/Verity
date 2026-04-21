@@ -8,6 +8,8 @@ import ServicesPage from "./pages/SearchPage";
 import ProfilePage from "./pages/ProfilePage";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
 import LeaveReview from "./pages/LeaveReview";
+import ProfileSettings from "./pages/ProfileSettings";
+
 
 export default function App() {
   const [session, setSession] = useState(undefined); // undefined = still loading
@@ -49,6 +51,12 @@ export default function App() {
         {/* Public routes */}
         <Route path="/" element={<LandingPage />} />
         <Route path="/auth" element={<AuthPage />} />
+
+        <Route path="/settings" element={
+          <ProtectedRoute session={session}>
+            <ProfileSettings />
+          </ProtectedRoute>
+        } />
 
         {/* Complete profile */}
         <Route
