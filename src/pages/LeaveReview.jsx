@@ -1,92 +1,94 @@
-// Structured review submission  
-// Attributes -> Punctuality, Quality, Communication
-// This will submit to the Supabase reviews table with reviewee_id & reviewer_id
+// Step-by-step structured review — one attribute per screen
+// Reduces cognitive load, forces deliberate honest ratings (RQ3)
 
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
 import Header from '../components/layout/Header';
 
-const ATTRIBUTES = [
+const STEPS = [
   {
     key: 'punctuality',
     label: 'Punctuality',
     icon: 'fa-solid fa-clock',
-    desc: 'Did they show up on time and meet deadlines?',
+    question: 'How was their punctuality?',
+    subtext: 'Did they show up on time and meet deadlines?',
     gradient: 'linear-gradient(135deg, #0047AB, #00D4FF)',
   },
   {
     key: 'quality',
     label: 'Quality',
     icon: 'fa-solid fa-star',
-    desc: 'How good was the overall quality of their service?',
+    question: 'How was the quality of their service?',
+    subtext: 'Was the work or service delivered to a good standard?',
     gradient: 'linear-gradient(135deg, #6A0DAD, #C77DFF)',
   },
   {
     key: 'communication',
     label: 'Communication',
     icon: 'fa-solid fa-comment',
-    desc: 'Were they responsive, clear, and easy to work with?',
+    question: 'How was their communication?',
+    subtext: 'Were they responsive, clear, and easy to work with?',
     gradient: 'linear-gradient(135deg, #00B4D8, #0047AB)',
   },
 ];
 
-// -------------------------star rating logic ----------------------------------------------------------------
-function StarRating({ value, onChange, gradient }) {
+
+
+// ── Star Rating ───────────────────────────────────────────────────────────────
+function StarRating({ value, onChange }) {
   const [hovered, setHovered] = useState(0);
+  const active = hovered || value;
 
   return (
-    <div className="flex items-center gap-2">
-      {[1, 2, 3, 4, 5].map((star) => {
-        const filled = star <= (hovered || value);
-        return (
+    <div className="flex flex-col items-center gap-4">
+      <div className="flex items-center gap-4">
+        {[1, 2, 3, 4, 5].map((star) => (
           <button
             key={star}
             type="button"
             onClick={() => onChange(star)}
             onMouseEnter={() => setHovered(star)}
             onMouseLeave={() => setHovered(0)}
-            className="transition-all hover:scale-125 focus:outline-none"
+            className="transition-all hover:scale-110 focus:outline-none"
           >
             <i
-              className={`fa-${filled ? 'solid' : 'regular'} fa-star text-3xl transition-all`}
+              className={`${star <= active ? 'fa-solid' : 'fa-regular'} fa-star text-5xl sm:text-6xl transition-all duration-150`}
               style={
-                filled
-                  ? { filter: 'drop-shadow(0 0 8px rgba(255,255,255,0.6))', color: 'white' }
-                  : { color: 'rgba(255,255,255,0.2)' }
+                star <= active
+                  ? {
+                      color: '#FBBF24',
+                      filter: 'drop-shadow(0 0 12px rgba(251,191,36,0.8))',
+                    }
+                  : { color: 'rgba(255,255,255,0.25)' }
               }
             />
           </button>
-        );
-      })}
-      {value > 0 && (
-        <span className="text-white/60 text-sm ml-2">{value}.0</span>
-      )}
+        ))}
+      </div>
+
     </div>
   );
 }
 
-// --------------page-----------------------------------------------------------------------------
-
+// ── Page ──────────────────────────────────────────────────────────────────────
 export default function LeaveReview() {
   const { userId } = useParams();
   const navigate = useNavigate();
 
   const [reviewee, setReviewee] = useState(null);
   const [currentUser, setCurrentUser] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [loadingPage, setLoadingPage] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState('');
 
-  const [ratings, setRatings] = useState({
-    punctuality: 0,
-    quality: 0,
-    communication: 0,
-  });
+  // Survey state
+  const [step, setStep] = useState(0); // 0-2 = attribute steps, 3 = comment, 4 = done
+  const [ratings, setRatings] = useState({ punctuality: 0, quality: 0, communication: 0 });
   const [comment, setComment] = useState('');
 
-  // -------------------- fetch reviewee profile + current user ------------------------------------------------------------------------------
+  // ── Load ──
   useEffect(() => {
     const load = async () => {
       const { data: { user } } = await supabase.auth.getUser();
@@ -94,7 +96,7 @@ export default function LeaveReview() {
 
       const { data: profile, error: profileError } = await supabase
         .from('profiles')
-        .select('id, username, bio, avatar_url, verified_student')
+        .select('id, username, avatar_url, verified_student')
         .eq('id', userId)
         .single();
 
@@ -103,37 +105,29 @@ export default function LeaveReview() {
       } else {
         setReviewee(profile);
       }
-      setLoading(false);
+      setLoadingPage(false);
     };
     load();
   }, [userId]);
 
-  // ------------ overall rating -------------------------------------------------------------------------
   const overallRating = () => {
-    const vals = Object.values(ratings).filter((v) => v > 0);
-    if (vals.length === 0) return 0;
+    const vals = Object.values(ratings);
     return Math.round(vals.reduce((a, b) => a + b, 0) / vals.length);
   };
 
-  const allRated = Object.values(ratings).every((v) => v > 0);
+  // ── Next step ──
+  const handleNext = () => {
+    const currentKey = STEPS[step]?.key;
+    if (ratings[currentKey] === 0) return; // must rate before continuing
+    setStep((s) => s + 1);
+  };
 
-  //----------------submit review -----------------------------------------------------
+  // ── Submit ──
   const handleSubmit = async () => {
-    if (!allRated) {
-      setError('Please rate all three attributes before submitting.');
-      return;
-    }
-    if (!currentUser) {
-      setError('You must be logged in to leave a review.');
-      return;
-    }
-    if (currentUser.id === userId) {
-      setError("You can't review yourself.");
-      return;
-    }
+    if (!currentUser) { setError('You must be logged in.'); return; }
+    if (currentUser.id === userId) { setError("You can't review yourself."); return; }
 
     setSubmitting(true);
-    setError('');
 
     const { error: insertError } = await supabase.from('reviews').insert({
       reviewee_id: userId,
@@ -159,8 +153,8 @@ export default function LeaveReview() {
     setSubmitting(false);
   };
 
-  
-  if (loading) {
+  // ── Loading ──
+  if (loadingPage) {
     return (
       <div className="min-h-screen flex items-center justify-center"
         style={{ background: 'linear-gradient(135deg, #0047AB 0%, #6A0DAD 50%, #1E1E2E 100%)' }}>
@@ -172,232 +166,198 @@ export default function LeaveReview() {
     );
   }
 
-  // -------------- it worked ---------------------------------------------------------
+  // ── Success ──
   if (submitted) {
     return (
-      <div className="min-h-screen"
+      <div className="min-h-screen flex items-center justify-center px-4"
         style={{ background: 'linear-gradient(135deg, #0047AB 0%, #6A0DAD 50%, #1E1E2E 100%)' }}>
-        <Header />
-        <div className="flex items-center justify-center min-h-screen px-4">
-          <div className="text-center max-w-md">
-            <div
-              className="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6 shadow-2xl"
-              style={{ background: 'linear-gradient(135deg, #0047AB, #6A0DAD)' }}
-            >
-              <i className="fa-solid fa-check text-white text-3xl" />
-            </div>
-            <h2 className="text-3xl text-white font-light mb-3">Review submitted!</h2>
-            <p className="text-white/60 text-sm mb-8 leading-relaxed">
-              Your structured review has been added to{' '}
-              <span className="text-white font-medium">
-                {reviewee?.username || 'this student'}
-              </span>
-              's Trust Profile.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-3 justify-center">
-              <button
-                onClick={() => navigate(`/profile/${userId}`)}
-                className="px-8 py-3 text-white rounded-full font-medium transition-all hover:scale-105 text-sm"
-                style={{ background: 'linear-gradient(135deg, #0047AB, #6A0DAD)' }}
-              >
-                View Their Profile
-              </button>
-              <button
-                onClick={() => navigate('/services')}
-                className="px-8 py-3 text-white/70 rounded-full font-medium border border-white/20 hover:bg-white/10 transition-all text-sm"
-              >
-                Back to Feed
-              </button>
-            </div>
+        <div className="text-center max-w-md">
+          <div className="w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-8 shadow-2xl"
+            style={{ background: 'linear-gradient(135deg, #0047AB, #6A0DAD)' }}>
+            <i className="fa-solid fa-check text-white text-4xl" />
+          </div>
+          <h2 className="text-4xl text-white font-light mb-3">Done!</h2>
+          <p className="text-white/60 text-sm mb-2 leading-relaxed">
+            Your review has been added to{' '}
+            <span className="text-white font-medium">@{reviewee?.username}</span>'s Trust Profile.
+          </p>
+          <p className="text-white/40 text-xs mb-10">
+            Thank you for helping build a more trustworthy campus community.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-3 justify-center">
+            <button onClick={() => navigate(`/profile/${userId}`)}
+              className="px-8 py-3 text-white rounded-full font-medium hover:scale-105 transition-all text-sm"
+              style={{ background: 'linear-gradient(135deg, #0047AB, #6A0DAD)' }}>
+              View Their Profile
+            </button>
+            <button onClick={() => navigate('/services')}
+              className="px-8 py-3 text-white/70 rounded-full border border-white/20 hover:bg-white/10 transition-all text-sm">
+              Back to Feed
+            </button>
           </div>
         </div>
       </div>
     );
   }
 
+  const isAttributeStep = step < STEPS.length;
+  const isCommentStep = step === STEPS.length;
+  const currentStep = isAttributeStep ? STEPS[step] : null;
+  const currentRating = isAttributeStep ? ratings[currentStep.key] : 0;
+
   return (
-    <div className="min-h-screen bg-neutral-100">
+    <div className="min-h-screen"
+      style={{ background: 'linear-gradient(135deg, #0047AB 0%, #6A0DAD 50%, #1E1E2E 100%)' }}>
       <Header />
 
-      
-      <section
-        className="relative pt-24 pb-12 px-4 sm:px-6 lg:px-8"
-        style={{
-          background: 'linear-gradient(135deg, #0047AB 0%, #6A0DAD 50%, #1E1E2E 100%)',
-        }}
-      >
-        <div
-          className="absolute inset-0 pointer-events-none"
-          style={{
-            background: 'radial-gradient(ellipse at top, rgba(255,255,255,0.05), transparent 50%)',
-          }}
-        />
-        <div className="max-w-2xl mx-auto relative z-10 text-center">
-          <p className="text-white/50 text-xs uppercase tracking-widest mb-4">
-            Structured Review
-          </p>
-          <h1 className="text-3xl sm:text-4xl text-white font-light mb-6">
-            Leave a Review
-          </h1>
+      <div className="min-h-screen flex flex-col items-center justify-center px-4 pt-20 pb-12">
+        <div className="w-full max-w-lg">
 
-          {/* reviewee's profile */}
+          {/* Reviewee identity */}
           {reviewee && (
-            <div className="flex items-center justify-center gap-4">
+            <div className="flex items-center justify-center gap-3 mb-10">
               <img
-                src={
-                  reviewee.avatar_url ||
-                  `https://api.dicebear.com/7.x/notionists/svg?scale=200&seed=${reviewee.id}`
-                }
+                src={reviewee.avatar_url || `https://api.dicebear.com/7.x/notionists/svg?scale=200&seed=${reviewee.id}`}
                 alt={reviewee.username}
-                className="w-14 h-14 rounded-full border-2 border-white/30 shadow-lg"
+                className="w-10 h-10 rounded-full border-2 border-white/30"
               />
-              <div className="text-left">
-                <div className="flex items-center gap-2">
-                  <span className="text-white font-medium">
-                    @{reviewee.username}
+              <div className="flex items-center gap-2">
+                <span className="text-white font-medium text-sm">@{reviewee.username}</span>
+                {reviewee.verified_student && (
+                  <span className="flex items-center gap-1 bg-green-500/20 border border-green-400/30 rounded-full px-2 py-0.5">
+                    <i className="fa-solid fa-check text-green-400 text-[10px]" />
+                    <span className="text-green-400 text-xs">Verified</span>
                   </span>
-                  {reviewee.verified_student && (
-                    <div className="flex items-center gap-1 bg-green-500/20 border border-green-400/30 rounded-full px-2 py-0.5">
-                      <i className="fa-solid fa-check text-green-400 text-[10px]" />
-                      <span className="text-green-400 text-xs">Verified</span>
-                    </div>
-                  )}
-                </div>
-                <p className="text-white/50 text-xs mt-0.5">
-                  Rate their punctuality, quality and communication
-                </p>
+                )}
               </div>
             </div>
           )}
-        </div>
-      </section>
 
-      {/* ---- review form ----- */}
-      <section
-        className="py-12 px-4 sm:px-6 lg:px-8"
-        style={{
-          background: 'linear-gradient(to right, #690DAB 0%, #decfe8 100%)',
-        }}
-      >
-        <div className="max-w-2xl mx-auto">
-          <div className="bg-neutral-100 rounded-3xl shadow-2xl border border-neutral-300 p-8 sm:p-10">
-
-            {/* error */}
-            {error && (
-              <div className="mb-6 p-3 bg-red-50 border border-red-200 rounded-xl flex items-start gap-2">
-                <i className="fa-solid fa-circle-exclamation text-red-500 text-sm mt-0.5 flex-shrink-0" />
-                <p className="text-red-600 text-sm">{error}</p>
-              </div>
-            )}
-
-            {/* attribute */}
-            <div className="space-y-8 mb-8">
-              {ATTRIBUTES.map(({ key, label, icon, desc, gradient }) => (
-                <div key={key}>
-                  <div className="flex items-center gap-3 mb-2">
-                    <div
-                      className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
-                      style={{ background: gradient }}
-                    >
-                      <i className={`${icon} text-white text-sm`} />
-                    </div>
-                    <div>
-                      <p className="text-neutral-700 font-semibold text-sm">{label}</p>
-                      <p className="text-neutral-400 text-xs">{desc}</p>
-                    </div>
-                  </div>
-                  <div className="mt-3 pl-12">
-                    <StarRating
-                      value={ratings[key]}
-                      onChange={(val) => setRatings((prev) => ({ ...prev, [key]: val }))}
-                      gradient={gradient}
-                    />
-                  </div>
-                  <div className="mt-3 pl-12 h-1.5 bg-neutral-200 rounded-full overflow-hidden">
-                    <div
-                      className="h-full rounded-full transition-all duration-500"
-                      style={{
-                        width: `${(ratings[key] / 5) * 100}%`,
-                        background: gradient,
-                      }}
-                    />
-                  </div>
-                </div>
-              ))}
+          {/* Error */}
+          {error && (
+            <div className="mb-6 p-3 bg-red-500/10 border border-red-400/30 rounded-xl flex items-start gap-2">
+              <i className="fa-solid fa-circle-exclamation text-red-400 text-sm mt-0.5 flex-shrink-0" />
+              <p className="text-red-300 text-sm">{error}</p>
             </div>
+          )}
 
-            {/* overall score preview */}
-            {allRated && (
-              <div
-                className="mb-8 p-4 rounded-2xl border border-white/20 text-center"
-                style={{ background: 'linear-gradient(135deg, #0047AB, #6A0DAD)' }}
-              >
-                <p className="text-white/70 text-xs uppercase tracking-widest mb-1">
-                  Overall Score
-                </p>
-                <p className="text-white text-4xl font-light">
-                  {overallRating()}.0
-                  <span className="text-white/40 text-lg"> / 5</span>
-                </p>
-                <p className="text-white/50 text-xs mt-1">
-                  Averaged across all three attributes
-                </p>
+          {/* ── Attribute step ── */}
+          {isAttributeStep && currentStep && (
+            <div className="text-center">
+              {/* Icon */}
+              <div className="w-20 h-20 rounded-2xl flex items-center justify-center mx-auto mb-8 shadow-xl"
+                style={{ background: currentStep.gradient }}>
+                <i className={`${currentStep.icon} text-white text-3xl`} />
               </div>
-            )}
 
-            {/*comment */}
-            <div className="mb-8">
-              <label className="block text-neutral-700 font-semibold text-sm mb-2">
-                Comment{' '}
-                <span className="text-neutral-400 font-normal">(optional)</span>
-              </label>
+              {/* Question */}
+              <h2 className="text-3xl sm:text-4xl text-white font-light mb-3">
+                {currentStep.question}
+              </h2>
+              <p className="text-white/50 text-sm mb-12">{currentStep.subtext}</p>
+
+              {/* Stars */}
+              <div className="mb-12">
+                <StarRating
+                  value={currentRating}
+                  onChange={(val) => setRatings((prev) => ({ ...prev, [currentStep.key]: val }))}
+                />
+              </div>
+
+              {/* Next button */}
+              <button
+                onClick={handleNext}
+                disabled={currentRating === 0}
+                className="w-full py-4 text-white rounded-2xl font-medium text-lg transition-all"
+                style={{
+                  background: currentRating > 0
+                    ? currentStep.gradient
+                    : 'rgba(255,255,255,0.1)',
+                  cursor: currentRating > 0 ? 'pointer' : 'not-allowed',
+                  opacity: currentRating > 0 ? 1 : 0.5,
+                }}
+              >
+                {step < STEPS.length - 1 ? 'Next' : 'Continue'}
+              </button>
+            </div>
+          )}
+
+          {/* ── Comment step ── */}
+          {isCommentStep && (
+            <div className="text-center">
+              <div className="w-20 h-20 rounded-2xl flex items-center justify-center mx-auto mb-8 shadow-xl"
+                style={{ background: 'linear-gradient(135deg, #0047AB, #6A0DAD)' }}>
+                <i className="fa-solid fa-pen text-white text-3xl" />
+              </div>
+
+              <h2 className="text-3xl sm:text-4xl text-white font-light mb-3">
+                Want to add anything?
+              </h2>
+              <p className="text-white/50 text-sm mb-2">
+                No worries if not — your star ratings are the main trust signal.
+              </p>
+              <p className="text-white/35 text-xs mb-8">
+                If you'd like to share any context about your experience, you can do so here.
+              </p>
+
               <textarea
-                rows={4}
+                rows={5}
                 value={comment}
                 onChange={(e) => setComment(e.target.value.slice(0, 300))}
-                placeholder="Share any additional context about your experience..."
-                className="w-full px-4 py-3 bg-white border border-neutral-300 rounded-xl text-neutral-700 placeholder-neutral-400 focus:outline-none focus:border-neutral-500 transition-all resize-none text-sm"
+                placeholder="Share any additional context... (optional)"
+                className="w-full px-5 py-4 rounded-2xl text-white placeholder-white/30 focus:outline-none resize-none text-sm mb-2 border border-white/15"
+                style={{ background: 'rgba(255,255,255,0.08)', backdropFilter: 'blur(12px)' }}
               />
-              <div className="flex justify-between mt-1">
-                <p className="text-neutral-400 text-xs">
-                  Optional — ratings are the primary trust signal
-                </p>
-                <span className="text-neutral-400 text-xs">{comment.length}/300</span>
+              <div className="text-right mb-8">
+                <span className="text-white/30 text-xs">{comment.length}/300</span>
               </div>
+
+              <button
+                onClick={handleSubmit}
+                disabled={submitting}
+                className="w-full py-4 text-white rounded-2xl font-medium text-lg transition-all mb-3"
+                style={{ background: 'linear-gradient(135deg, #0047AB, #6A0DAD)' }}
+              >
+                {submitting ? (
+                  <><i className="fa-solid fa-spinner fa-spin mr-2" />Submitting...</>
+                ) : (
+                  <><i className="fa-solid fa-paper-plane mr-2" />Submit Review</>
+                )}
+              </button>
+
+              <button
+                onClick={() => setStep((s) => s - 1)}
+                className="text-white/40 text-sm hover:text-white/70 transition-colors"
+              >
+                ← Back
+              </button>
             </div>
+          )}
 
-            {/* submit */}
-            <button
-              onClick={handleSubmit}
-              disabled={submitting || !allRated}
-              className="w-full py-4 text-white rounded-xl font-semibold transition-all text-sm"
-              style={{
-                background: allRated
-                  ? 'linear-gradient(135deg, #0047AB, #6A0DAD)'
-                  : '#d4d4d4',
-                cursor: allRated ? 'pointer' : 'not-allowed',
-              }}
-            >
-              {submitting ? (
-                <>
-                  <i className="fa-solid fa-spinner fa-spin mr-2" />
-                  Submitting...
-                </>
-              ) : (
-                <>
-                  <i className="fa-solid fa-paper-plane mr-2" />
-                  Submit Review
-                </>
-              )}
-            </button>
-
-            <p className="text-neutral-400 text-xs text-center mt-4">
-              Reviews are tied to your verified Aston identity and cannot be anonymous
-            </p>
-
+          {/* ── Pagination dots ── */}
+          <div className="flex items-center justify-center gap-3 mt-10">
+            {[...STEPS, { key: 'comment' }].map((s, i) => (
+              <div
+                key={s.key}
+                className="rounded-full transition-all duration-300"
+                style={{
+                  width: i === step ? '24px' : '8px',
+                  height: '8px',
+                  background: i === step
+                    ? 'white'
+                    : i < step
+                    ? 'rgba(255,255,255,0.5)'
+                    : 'rgba(255,255,255,0.2)',
+                }}
+              />
+            ))}
           </div>
+          <p className="text-white/30 text-xs text-center mt-3">
+            {isAttributeStep ? `${step + 1} of ${STEPS.length}` : 'Almost done'}
+          </p>
+
         </div>
-      </section>
+      </div>
     </div>
   );
 }
