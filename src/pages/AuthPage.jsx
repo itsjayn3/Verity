@@ -1,384 +1,364 @@
-// AuthPage.jsx
-// Login + Sign up with @aston.ac.uk domain restriction
-// Frontend validation + Supabase trigger = two-layer enforcement (RQ1)
+// LeaveReview.jsx
+// Step-by-step structured review — one attribute per screen
+// Reduces cognitive load, forces deliberate honest ratings (RQ3)
 
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
+import Header from '../components/layout/Header';
 
-export default function AuthPage() {
-  const navigate = useNavigate();
-  const [isLogin, setIsLogin] = useState(true);
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-  const [successMsg, setSuccessMsg] = useState('');
-
-  // ── Validation ─────────────────────────────────────────────────────────────
-  const isAstonEmail = (val) => val.trim().toLowerCase().endsWith('@aston.ac.uk');
-
-  const validate = () => {
-    if (!email.trim()) {
-      setError('Please enter your university email.');
-      return false;
-    }
-    if (!isAstonEmail(email)) {
-      setError('Only @aston.ac.uk email addresses are permitted. Verity is exclusive to verified Aston students.');
-      return false;
-    }
-    if (password.length < 8) {
-      setError('Password must be at least 8 characters.');
-      return false;
-    }
-    return true;
-  };
-
-
-  // ── Submit ──────────────────────────────────────────────────────────────────
-  const handleSubmit = async () => {
-    setError('');
-    setSuccessMsg('');
-    if (!validate()) return;
-
-    setLoading(true);
-
-    if (isLogin) {
-      // ── Sign In ──
-      const { error: signInError } = await supabase.auth.signInWithPassword({
-        email: email.trim(),
-        password,
-      });
-
-      if (signInError) {
-        setError(signInError.message);
-      } else {
-        navigate('/services');
-      }
-    } else {
-      // ── Sign Up ──
-      const { error: signUpError } = await supabase.auth.signUp({
-        email: email.trim(),
-        password,
-      });
-
-      if (signUpError) {
-        // Surface the Postgres trigger error clearly
-        if (signUpError.message.includes('aston')) {
-          setError('Only @aston.ac.uk email addresses are permitted.');
-        } else {
-          setError(signUpError.message);
-        }
-      } else {
-        setSuccessMsg(
-          'Account created! Check your Aston email to confirm your account, then come back to log in.'
-        );
-      }
-    }
-
-    setLoading(false);
-  };
+const STEPS = [
+  {
+    key: 'punctuality',
+    label: 'Punctuality',
+    icon: 'fa-solid fa-clock',
+    question: 'How was their punctuality?',
+    subtext: 'Did they show up on time and meet deadlines?',
+    gradient: 'linear-gradient(135deg, #0047AB, #00D4FF)',
+  },
+  {
+    key: 'quality',
+    label: 'Quality',
+    icon: 'fa-solid fa-star',
+    question: 'How was the quality of their service?',
+    subtext: 'Was the work or service delivered to a good standard?',
+    gradient: 'linear-gradient(135deg, #6A0DAD, #C77DFF)',
+  },
+  {
+    key: 'communication',
+    label: 'Communication',
+    icon: 'fa-solid fa-comment',
+    question: 'How was their communication?',
+    subtext: 'Were they responsive, clear, and easy to work with?',
+    gradient: 'linear-gradient(135deg, #00B4D8, #0047AB)',
+  },
+];
 
 
-  const handleKeyDown = (e) => {
-    if (e.key === 'Enter') handleSubmit();
-  };
 
-  const handleForgotPassword = async () => {
-  if (!email.trim()) {
-    setError('Please enter your email address first, then click Forgot Password.');
-    return;
-  }
-  if (!isAstonEmail(email)) {
-    setError('Please enter your @aston.ac.uk email address first.');
-    return;
-  }
-
-  setLoading(true);
-  const { error: resetError } = await supabase.auth.resetPasswordForEmail(
-    email.trim(),
-    { redirectTo: 'http://localhost:5173/reset-password' }
-  );
-
-  if (resetError) {
-    setError(resetError.message);
-  } else {
-    setSuccessMsg('Password reset email sent! Check your Aston inbox.');
-  }
-  setLoading(false);
-};
-
-{isLogin && (
-  <div className="text-right">
-    <button
-      onClick={handleForgotPassword}
-      className="text-sm text-blue-600 hover:text-blue-800 transition-colors"
-    >
-      Forgot password?
-    </button>
-  </div>
-)}
-  // ── Email field border colour ───────────────────────────────────────────────
-  const emailBorderColor = () => {
-    if (!email) return 'border-neutral-300';
-    if (isAstonEmail(email)) return 'border-green-400';
-    return 'border-red-400';
-  };
+// ── Star Rating ───────────────────────────────────────────────────────────────
+function StarRating({ value, onChange }) {
+  const [hovered, setHovered] = useState(0);
+  const active = hovered || value;
 
   return (
-    <div className="min-h-screen flex">
+    <div className="flex flex-col items-center gap-4">
+      <div className="flex items-center gap-4">
+        {[1, 2, 3, 4, 5].map((star) => (
+          <button
+            key={star}
+            type="button"
+            onClick={() => onChange(star)}
+            onMouseEnter={() => setHovered(star)}
+            onMouseLeave={() => setHovered(0)}
+            className="transition-all hover:scale-110 focus:outline-none"
+          >
+            <i
+              className={`${star <= active ? 'fa-solid' : 'fa-regular'} fa-star text-5xl sm:text-6xl transition-all duration-150`}
+              style={
+                star <= active
+                  ? {
+                      color: '#FBBF24',
+                      filter: 'drop-shadow(0 0 12px rgba(251,191,36,0.8))',
+                    }
+                  : { color: 'rgba(255,255,255,0.25)' }
+              }
+            />
+          </button>
+        ))}
+      </div>
 
-      {/* ── Left branding panel (desktop only) ── */}
-      <div
-        className="hidden lg:flex lg:w-1/2 relative overflow-hidden flex-col justify-center items-center text-center text-white p-12"
-        style={{
-          background: 'linear-gradient(135deg, #0047AB 0%, #6A0DAD 60%, #1E1E2E 100%)',
-        }}
-      >
-        {/* Radial highlights */}
-        <div className="absolute inset-0 pointer-events-none"
-          style={{ background: 'radial-gradient(ellipse at top right, rgba(255,255,255,0.08), transparent 50%)' }} />
-        <div className="absolute inset-0 pointer-events-none"
-          style={{ background: 'radial-gradient(ellipse at bottom left, rgba(255,255,255,0.04), transparent 50%)' }} />
+    </div>
+  );
+}
 
-        <div className="relative z-10 max-w-md">
-          {/* Logo */}
-          <h1 className="text-6xl text-white font-light tracking-widest mb-3">
-            VERITY
-          </h1>
-          <p className="text-white/70 text-lg mb-12">
-            A trusted student marketplace
+// ── Page ──────────────────────────────────────────────────────────────────────
+export default function LeaveReview() {
+  const { userId } = useParams();
+  const navigate = useNavigate();
+
+  const [reviewee, setReviewee] = useState(null);
+  const [currentUser, setCurrentUser] = useState(null);
+  const [loadingPage, setLoadingPage] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
+  const [error, setError] = useState('');
+
+  // Survey state
+  const [step, setStep] = useState(0); // 0-2 = attribute steps, 3 = comment, 4 = done
+  const [ratings, setRatings] = useState({ punctuality: 0, quality: 0, communication: 0 });
+  const [comment, setComment] = useState('');
+
+  // ── Load ──
+  useEffect(() => {
+    const load = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      setCurrentUser(user);
+
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('id, username, avatar_url, verified_student')
+        .eq('id', userId)
+        .single();
+
+      if (profileError || !profile) {
+        setError('Profile not found.');
+      } else {
+        setReviewee(profile);
+      }
+      setLoadingPage(false);
+    };
+    load();
+  }, [userId]);
+
+  const overallRating = () => {
+    const vals = Object.values(ratings);
+    return Math.round(vals.reduce((a, b) => a + b, 0) / vals.length);
+  };
+
+  // ── Next step ──
+  const handleNext = () => {
+    const currentKey = STEPS[step]?.key;
+    if (ratings[currentKey] === 0) return; // must rate before continuing
+    setStep((s) => s + 1);
+  };
+
+  // ── Submit ──
+  const handleSubmit = async () => {
+    if (!currentUser) { setError('You must be logged in.'); return; }
+    if (currentUser.id === userId) { setError("You can't review yourself."); return; }
+
+    setSubmitting(true);
+
+    const { error: insertError } = await supabase.from('reviews').insert({
+      reviewee_id: userId,
+      reviewer_id: currentUser.id,
+      punctuality_rating: ratings.punctuality,
+      quality_rating: ratings.quality,
+      communication_rating: ratings.communication,
+      overall_rating: overallRating(),
+      comment: comment.trim() || null,
+    });
+
+    if (insertError) {
+      if (insertError.code === '23505') {
+        setError("You've already reviewed this student.");
+      } else {
+        setError(insertError.message);
+      }
+      setSubmitting(false);
+      return;
+    }
+
+    setSubmitted(true);
+    setSubmitting(false);
+  };
+
+  // ── Loading ──
+  if (loadingPage) {
+    return (
+      <div className="min-h-screen flex items-center justify-center"
+        style={{ background: 'linear-gradient(135deg, #0047AB 0%, #6A0DAD 50%, #1E1E2E 100%)' }}>
+        <div className="text-center">
+          <div className="w-12 h-12 rounded-full border-4 border-white/20 border-t-white animate-spin mx-auto mb-4" />
+          <p className="text-white/60 text-sm tracking-widest uppercase">Loading</p>
+        </div>
+      </div>
+    );
+  }
+
+  // ── Success ──
+  if (submitted) {
+    return (
+      <div className="min-h-screen flex items-center justify-center px-4"
+        style={{ background: 'linear-gradient(135deg, #0047AB 0%, #6A0DAD 50%, #1E1E2E 100%)' }}>
+        <div className="text-center max-w-md">
+          <div className="w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-8 shadow-2xl"
+            style={{ background: 'linear-gradient(135deg, #0047AB, #6A0DAD)' }}>
+            <i className="fa-solid fa-check text-white text-4xl" />
+          </div>
+          <h2 className="text-4xl text-white font-light mb-3">Done!</h2>
+          <p className="text-white/60 text-sm mb-2 leading-relaxed">
+            Your review has been added to{' '}
+            <span className="text-white font-medium">@{reviewee?.username}</span>'s Trust Profile.
           </p>
-
-          {/* Trust feature cards */}
-          <div className="space-y-4 text-left">
-            {[
-              {
-                icon: 'fa-solid fa-shield-halved',
-                title: 'Verified Identities',
-                desc: 'Every user is a real Aston student — no anonymous accounts, no strangers.',
-              },
-              {
-                icon: 'fa-solid fa-gem',
-                title: 'Trust Orb',
-                desc: 'Visual reputation scores built from structured, attribute-based reviews.',
-              },
-              {
-                icon: 'fa-solid fa-star-half-stroke',
-                title: 'Structured Reviews',
-                desc: 'Ratings for punctuality, quality, and communication — not vague star scores.',
-              },
-            ].map(({ icon, title, desc }) => (
-              <div
-                key={title}
-                className="flex items-start gap-4 p-4 rounded-2xl border border-white/15"
-                style={{ background: 'rgba(255,255,255,0.07)', backdropFilter: 'blur(10px)' }}
-              >
-                <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
-                  style={{ background: 'rgba(255,255,255,0.15)' }}>
-                  <i className={`${icon} text-white text-sm`} />
-                </div>
-                <div>
-                  <p className="text-white font-medium text-sm mb-1">{title}</p>
-                  <p className="text-white/60 text-xs leading-relaxed">{desc}</p>
-                </div>
-              </div>
-            ))}
+          <p className="text-white/40 text-xs mb-10">
+            Thank you for helping build a more trustworthy campus community.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-3 justify-center">
+            <button onClick={() => navigate(`/profile/${userId}`)}
+              className="px-8 py-3 text-white rounded-full font-medium hover:scale-105 transition-all text-sm"
+              style={{ background: 'linear-gradient(135deg, #0047AB, #6A0DAD)' }}>
+              View Their Profile
+            </button>
+            <button onClick={() => navigate('/services')}
+              className="px-8 py-3 text-white/70 rounded-full border border-white/20 hover:bg-white/10 transition-all text-sm">
+              Back to Feed
+            </button>
           </div>
         </div>
       </div>
+    );
+  }
 
-      {/* ── Right: Auth form ── */}
-      <div className="w-full lg:w-1/2 flex items-center justify-center p-6 lg:p-12 bg-neutral-50">
-        <div className="w-full max-w-md">
+  const isAttributeStep = step < STEPS.length;
+  const isCommentStep = step === STEPS.length;
+  const currentStep = isAttributeStep ? STEPS[step] : null;
+  const currentRating = isAttributeStep ? ratings[currentStep.key] : 0;
 
-          {/* Mobile logo */}
-          <div className="lg:hidden text-center mb-8">
-            <h1 className="text-4xl font-light tracking-widest text-neutral-800 mb-2">
-              VERITY
-            </h1>
-            <p className="text-neutral-500 text-sm">A trusted student marketplace</p>
-          </div>
+  return (
+    <div className="min-h-screen"
+      style={{ background: 'linear-gradient(135deg, #0047AB 0%, #6A0DAD 50%, #1E1E2E 100%)' }}>
+      <Header />
 
-          {/* Card */}
-          <div className="bg-white rounded-2xl shadow-xl border border-neutral-100 p-8">
+      <div className="min-h-screen flex flex-col items-center justify-center px-4 pt-20 pb-12">
+        <div className="w-full max-w-lg">
 
-            {/* Tab toggle */}
-            <div className="flex bg-neutral-100 rounded-xl p-1 mb-8">
-              {['Log In', 'Sign Up'].map((tab) => {
-                const active = (tab === 'Log In') === isLogin;
-                return (
-                  <button
-                    key={tab}
-                    onClick={() => {
-                      setIsLogin(tab === 'Log In');
-                      setError('');
-                      setSuccessMsg('');
-                    }}
-                    className="flex-1 py-2.5 px-4 text-sm font-medium rounded-lg transition-all"
-                    style={
-                      active
-                        ? { background: 'white', color: '#171717', boxShadow: '0 1px 4px rgba(0,0,0,0.1)' }
-                        : { color: '#737373' }
-                    }
-                  >
-                    {tab}
-                  </button>
-                );
-              })}
+          {/* Reviewee identity */}
+          {reviewee && (
+            <div className="flex items-center justify-center gap-3 mb-10">
+              <img
+                src={reviewee.avatar_url || `https://api.dicebear.com/7.x/notionists/svg?scale=200&seed=${reviewee.id}`}
+                alt={reviewee.username}
+                className="w-10 h-10 rounded-full border-2 border-white/30"
+              />
+              <div className="flex items-center gap-2">
+                <span className="text-white font-medium text-sm">@{reviewee.username}</span>
+                {reviewee.verified_student && (
+                  <span className="flex items-center gap-1 bg-green-500/20 border border-green-400/30 rounded-full px-2 py-0.5">
+                    <i className="fa-solid fa-check text-green-400 text-[10px]" />
+                    <span className="text-green-400 text-xs">Verified</span>
+                  </span>
+                )}
+              </div>
             </div>
+          )}
 
-            {/* Header */}
-            <div className="text-center mb-8">
-              <h2 className="text-2xl font-semibold text-neutral-800 mb-1">
-                {isLogin ? 'Welcome back' : 'Join Verity'}
+          {/* Error */}
+          {error && (
+            <div className="mb-6 p-3 bg-red-500/10 border border-red-400/30 rounded-xl flex items-start gap-2">
+              <i className="fa-solid fa-circle-exclamation text-red-400 text-sm mt-0.5 flex-shrink-0" />
+              <p className="text-red-300 text-sm">{error}</p>
+            </div>
+          )}
+
+          {/* ── Attribute step ── */}
+          {isAttributeStep && currentStep && (
+            <div className="text-center">
+              {/* Icon */}
+              <div className="w-20 h-20 rounded-2xl flex items-center justify-center mx-auto mb-8 shadow-xl"
+                style={{ background: currentStep.gradient }}>
+                <i className={`${currentStep.icon} text-white text-3xl`} />
+              </div>
+
+              {/* Question */}
+              <h2 className="text-3xl sm:text-4xl text-white font-light mb-3">
+                {currentStep.question}
               </h2>
-              <p className="text-neutral-500 text-sm">
-                {isLogin
-                  ? 'Sign in to your student account'
-                  : 'Create your verified student account'}
-              </p>
-            </div>
+              <p className="text-white/50 text-sm mb-12">{currentStep.subtext}</p>
 
-            {/* Error message */}
-            {error && (
-              <div className="mb-6 p-3 bg-red-50 border border-red-200 rounded-xl flex items-start gap-2">
-                <i className="fa-solid fa-circle-exclamation text-red-500 text-sm mt-0.5 flex-shrink-0" />
-                <p className="text-red-600 text-sm leading-relaxed">{error}</p>
-              </div>
-            )}
-
-            {/* Success message */}
-            {successMsg && (
-              <div className="mb-6 p-3 bg-green-50 border border-green-200 rounded-xl flex items-start gap-2">
-                <i className="fa-solid fa-circle-check text-green-500 text-sm mt-0.5 flex-shrink-0" />
-                <p className="text-green-700 text-sm leading-relaxed">{successMsg}</p>
-              </div>
-            )}
-
-            {/* Form */}
-            <div className="space-y-5">
-
-              {/* Email */}
-              <div>
-                <label className="block text-sm font-medium text-neutral-700 mb-1.5">
-                  University Email
-                </label>
-                <div className="relative">
-                  <input
-                    type="email"
-                    value={email}
-                    onChange={(e) => {
-                      setEmail(e.target.value);
-                      setError('');
-                    }}
-                    onKeyDown={handleKeyDown}
-                    placeholder="your.name@aston.ac.uk"
-                    className={`w-full px-4 py-3 pr-10 border rounded-xl text-neutral-800 placeholder-neutral-400 focus:outline-none transition-all text-sm ${emailBorderColor()}`}
-                  />
-                  <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
-                    {email && isAstonEmail(email) ? (
-                      <i className="fa-solid fa-circle-check text-green-500 text-sm" />
-                    ) : (
-                      <i className="fa-solid fa-envelope text-neutral-400 text-sm" />
-                    )}
-                  </div>
-                </div>
-                <p className="text-neutral-400 text-xs mt-1.5">
-                  Must be a verified <span className="font-medium">@aston.ac.uk</span> address
-                </p>
+              {/* Stars */}
+              <div className="mb-12">
+                <StarRating
+                  value={currentRating}
+                  onChange={(val) => setRatings((prev) => ({ ...prev, [currentStep.key]: val }))}
+                />
               </div>
 
-              {/* Password */}
-              <div>
-                <label className="block text-sm font-medium text-neutral-700 mb-1.5">
-                  Password
-                </label>
-                <div className="relative">
-                  <input
-                    type={showPassword ? 'text' : 'password'}
-                    value={password}
-                    onChange={(e) => {
-                      setPassword(e.target.value);
-                      setError('');
-                    }}
-                    onKeyDown={handleKeyDown}
-                    placeholder={isLogin ? 'Enter your password' : 'Create a password (min. 8 characters)'}
-                    className="w-full px-4 py-3 pr-10 border border-neutral-300 rounded-xl text-neutral-800 placeholder-neutral-400 focus:outline-none focus:border-neutral-500 transition-all text-sm"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute inset-y-0 right-0 pr-3 flex items-center text-neutral-400 hover:text-neutral-600 transition-colors"
-                  >
-                    <i className={`fa-solid ${showPassword ? 'fa-eye-slash' : 'fa-eye'} text-sm`} />
-                  </button>
-                </div>
-              </div>
-
-              {/* Forgot password */}
-              {isLogin && (
-                <div className="text-right">
-                  <button className="text-sm text-blue-600 hover:text-blue-800 transition-colors">
-                    Forgot password?
-                  </button>
-                </div>
-              )}
-
-              {/* Submit */}
+              {/* Next button */}
               <button
-                onClick={handleSubmit}
-                disabled={loading}
-                className="w-full py-3 text-white rounded-xl font-medium transition-all text-sm"
+                onClick={handleNext}
+                disabled={currentRating === 0}
+                className="w-full py-4 text-white rounded-2xl font-medium text-lg transition-all"
                 style={{
-                  background: loading
-                    ? '#a3a3a3'
-                    : 'linear-gradient(135deg, #0047AB 0%, #6A0DAD 100%)',
-                  cursor: loading ? 'not-allowed' : 'pointer',
+                  background: currentRating > 0
+                    ? currentStep.gradient
+                    : 'rgba(255,255,255,0.1)',
+                  cursor: currentRating > 0 ? 'pointer' : 'not-allowed',
+                  opacity: currentRating > 0 ? 1 : 0.5,
                 }}
               >
-                {loading ? (
-                  <>
-                    <i className="fa-solid fa-spinner fa-spin mr-2" />
-                    {isLogin ? 'Signing in...' : 'Creating account...'}
-                  </>
-                ) : (
-                  isLogin ? 'Sign In' : 'Create Account'
-                )}
+                {step < STEPS.length - 1 ? 'Next' : 'Continue'}
               </button>
             </div>
+          )}
 
-            {/* Switch mode */}
-            <div className="text-center mt-6 pt-6 border-t border-neutral-100">
-              <p className="text-neutral-500 text-sm">
-                {isLogin ? "Don't have an account?" : 'Already have an account?'}
-                <button
-                  onClick={() => {
-                    setIsLogin(!isLogin);
-                    setError('');
-                    setSuccessMsg('');
-                  }}
-                  className="ml-1 text-blue-600 font-medium hover:text-blue-800 transition-colors"
-                >
-                  {isLogin ? 'Sign up' : 'Sign in'}
-                </button>
+          {/* ── Comment step ── */}
+          {isCommentStep && (
+            <div className="text-center">
+              <div className="w-20 h-20 rounded-2xl flex items-center justify-center mx-auto mb-8 shadow-xl"
+                style={{ background: 'linear-gradient(135deg, #0047AB, #6A0DAD)' }}>
+                <i className="fa-solid fa-pen text-white text-3xl" />
+              </div>
+
+              <h2 className="text-3xl sm:text-4xl text-white font-light mb-3">
+                Want to add anything?
+              </h2>
+              <p className="text-white/50 text-sm mb-2">
+                No worries if not — your star ratings are the main trust signal.
               </p>
-            </div>
-          </div>
+              <p className="text-white/35 text-xs mb-8">
+                If you'd like to share any context about your experience, you can do so here.
+              </p>
 
-          {/* Security notice */}
-          <div className="mt-6 text-center">
-            <div className="flex items-center justify-center gap-2 text-sm text-neutral-500">
-              <i className="fa-solid fa-shield-halved text-green-500" />
-              <span>Access restricted to verified Aston University students</span>
+              <textarea
+                rows={5}
+                value={comment}
+                onChange={(e) => setComment(e.target.value.slice(0, 300))}
+                placeholder="Share any additional context... (optional)"
+                className="w-full px-5 py-4 rounded-2xl text-white placeholder-white/30 focus:outline-none resize-none text-sm mb-2 border border-white/15"
+                style={{ background: 'rgba(255,255,255,0.08)', backdropFilter: 'blur(12px)' }}
+              />
+              <div className="text-right mb-8">
+                <span className="text-white/30 text-xs">{comment.length}/300</span>
+              </div>
+
+              <button
+                onClick={handleSubmit}
+                disabled={submitting}
+                className="w-full py-4 text-white rounded-2xl font-medium text-lg transition-all mb-3"
+                style={{ background: 'linear-gradient(135deg, #0047AB, #6A0DAD)' }}
+              >
+                {submitting ? (
+                  <><i className="fa-solid fa-spinner fa-spin mr-2" />Submitting...</>
+                ) : (
+                  <><i className="fa-solid fa-paper-plane mr-2" />Submit Review</>
+                )}
+              </button>
+
+              <button
+                onClick={() => setStep((s) => s - 1)}
+                className="text-white/40 text-sm hover:text-white/70 transition-colors"
+              >
+                ← Back
+              </button>
             </div>
+          )}
+
+          {/* ── Pagination dots ── */}
+          <div className="flex items-center justify-center gap-3 mt-10">
+            {[...STEPS, { key: 'comment' }].map((s, i) => (
+              <div
+                key={s.key}
+                className="rounded-full transition-all duration-300"
+                style={{
+                  width: i === step ? '24px' : '8px',
+                  height: '8px',
+                  background: i === step
+                    ? 'white'
+                    : i < step
+                    ? 'rgba(255,255,255,0.5)'
+                    : 'rgba(255,255,255,0.2)',
+                }}
+              />
+            ))}
           </div>
+          <p className="text-white/30 text-xs text-center mt-3">
+            {isAttributeStep ? `${step + 1} of ${STEPS.length}` : 'Almost done'}
+          </p>
 
         </div>
       </div>
     </div>
   );
-
-
 }
