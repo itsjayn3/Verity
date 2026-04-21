@@ -60,7 +60,7 @@ export default function AuthPage() {
           .eq('id', signInData.user.id)
           .single();
 
-        if (!profile || !profile.username) {
+        if (!profile || !profile.username || profile.username.trim() === ''){ 
           navigate('/complete-profile');
         } else {
           navigate('/services');
