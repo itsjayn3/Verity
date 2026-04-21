@@ -7,6 +7,11 @@ import CompleteProfile from "./pages/CompleteProfile";
 import ServicesPage from "./pages/SearchPage";
 import ProfilePage from "./pages/ProfilePage";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
+import LeaveReview from "./pages/LeaveReview";
+
+
+
+
 
 export default function App() {
   useEffect(() => {
@@ -56,10 +61,21 @@ export default function App() {
             </ProtectedRoute>
           }
         />
+        {/* leave a review*/}
+        <Route 
+          path="/review/:userId" 
+          element={
+            <ProtectedRoute>
+              <LeaveReview />
+            </ProtectedRoute>
+            } 
+            />
 
         {/* Fallback */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>
   );
+
+  
 }
