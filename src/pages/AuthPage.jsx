@@ -35,6 +35,7 @@ export default function AuthPage() {
     return true;
   };
 
+
   // ── Submit ──────────────────────────────────────────────────────────────────
   const handleSubmit = async () => {
     setError('');
@@ -79,10 +80,45 @@ export default function AuthPage() {
     setLoading(false);
   };
 
+
   const handleKeyDown = (e) => {
     if (e.key === 'Enter') handleSubmit();
   };
 
+  const handleForgotPassword = async () => {
+  if (!email.trim()) {
+    setError('Please enter your email address first, then click Forgot Password.');
+    return;
+  }
+  if (!isAstonEmail(email)) {
+    setError('Please enter your @aston.ac.uk email address first.');
+    return;
+  }
+
+  setLoading(true);
+  const { error: resetError } = await supabase.auth.resetPasswordForEmail(
+    email.trim(),
+    { redirectTo: 'http://localhost:5173/reset-password' }
+  );
+
+  if (resetError) {
+    setError(resetError.message);
+  } else {
+    setSuccessMsg('Password reset email sent! Check your Aston inbox.');
+  }
+  setLoading(false);
+};
+
+{isLogin && (
+  <div className="text-right">
+    <button
+      onClick={handleForgotPassword}
+      className="text-sm text-blue-600 hover:text-blue-800 transition-colors"
+    >
+      Forgot password?
+    </button>
+  </div>
+)}
   // ── Email field border colour ───────────────────────────────────────────────
   const emailBorderColor = () => {
     if (!email) return 'border-neutral-300';
@@ -343,4 +379,6 @@ export default function AuthPage() {
       </div>
     </div>
   );
+
+
 }
