@@ -9,7 +9,7 @@ import ProfilePage from "./pages/ProfilePage";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
 import LeaveReview from "./pages/LeaveReview";
 import ProfileSettings from "./pages/ProfileSettings";
-
+import PostService from "./pages/PostService";
 
 export default function App() {
   const [session, setSession] = useState(undefined); // undefined = still loading
@@ -58,6 +58,12 @@ export default function App() {
           </ProtectedRoute>
         } />
 
+        <Route path="/post-service" element={
+          <ProtectedRoute session={session}>
+            <PostService />
+          </ProtectedRoute>
+        } />
+        
         {/* Complete profile */}
         <Route
           path="/complete-profile"

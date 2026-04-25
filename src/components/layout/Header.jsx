@@ -139,8 +139,7 @@ export default function Header() {
           <div className="md:hidden pb-4 flex flex-col space-y-3">
             {[
               { label: 'Feed', path: '/services' },
-              { label: 'Services', path: '/services' },
-              { label: 'Community', path: '/services' },
+              { label: 'Post a Service', path: '/post-service' },
             ].map(({ label, path }) => (
               <Link
                 key={label}
