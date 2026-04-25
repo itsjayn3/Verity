@@ -15,7 +15,7 @@ export default function Header() {
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
         setUserId(user.id);
-        // Fetch avatar from profiles
+        // fetch avatar from profiles
         const { data: profile } = await supabase
           .from('profiles')
           .select('avatar_url')
@@ -27,7 +27,7 @@ export default function Header() {
     getUser();
   }, []);
 
-  // Close dropdown when clicking outside
+  // close dropdown when clicking anywhere else on screen
   useEffect(() => {
     const handleClickOutside = (e) => {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
@@ -51,12 +51,12 @@ export default function Header() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
 
-          {/* Logo */}
+          {/* logo */}
           <Link to="/services" className="text-2xl text-white tracking-widest font-light">
             VERITY
           </Link>
 
-          {/* Desktop Nav */}
+          {/* desktop nav */}
           <nav className="hidden md:flex space-x-8">
             {[
               { label: 'Feed', path: '/services' },
@@ -73,13 +73,13 @@ export default function Header() {
             ))}
           </nav>
 
-          {/* Right Actions */}
+          
           <div className="flex items-center space-x-4">
             <button className="text-white/80 hover:text-white transition-all">
               <i className="fa-solid fa-bell text-sm" />
             </button>
 
-            {/* Profile avatar + dropdown */}
+            {/* profile pic + dropdown */}
             <div className="relative" ref={dropdownRef}>
               <button
                 onClick={() => setDropdownOpen(!dropdownOpen)}
@@ -92,7 +92,7 @@ export default function Header() {
                 />
               </button>
 
-              {/* Dropdown menu */}
+              {/* dropdown menu */}
               {dropdownOpen && (
                 <div
                   className="absolute right-0 mt-2 w-48 rounded-2xl border border-white/15 shadow-2xl overflow-hidden z-50"
@@ -124,7 +124,7 @@ export default function Header() {
               )}
             </div>
 
-            {/* Mobile Hamburger */}
+            {/* phone hamburger menu */}
             <button
               className="md:hidden text-white/80 hover:text-white transition-all"
               onClick={() => setMenuOpen(!menuOpen)}
@@ -134,7 +134,7 @@ export default function Header() {
           </div>
         </div>
 
-        {/* Mobile Menu */}
+        {/* phone menu */}
         {menuOpen && (
           <div className="md:hidden pb-4 flex flex-col space-y-3">
             {[
