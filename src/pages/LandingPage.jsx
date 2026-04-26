@@ -215,7 +215,7 @@ export default function LandingPage() {
           </button>
 
           <p className="text-white/40 text-xs mt-4">
-            Exclusively for verified Aston University students
+            Exclusively for Aston University students
           </p>
         </div>
 
