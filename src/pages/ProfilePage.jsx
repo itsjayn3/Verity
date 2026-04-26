@@ -1,7 +1,3 @@
-// ProfilePage.jsx
-// Public-facing profile — loads real data from Supabase
-// RQ1: Verified badge | RQ2: Trust Orb | RQ3: Structured reviews
-
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
@@ -9,7 +5,7 @@ import Header from '../components/layout/Header';
 import TrustOrb from '../components/profile/TrustOrb';
 import ReviewCard from '../components/profile/ReviewCard';
 
-// ── Aggregate scores from real reviews ───────────────────────────────────────
+//  scores from reviews
 function aggregateScores(reviews) {
   if (!reviews.length) return { punctuality: 0, quality: 0, communication: 0 };
   const sum = reviews.reduce(
@@ -36,14 +32,17 @@ export default function ProfilePage() {
   const [currentUserId, setCurrentUserId] = useState(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('reviews');
+  const [services, setServices] = useState([]);
+  const [portfolioItems, setPortfolioItems] = useState([]);
+  const [expandedImage, setExpandedImage] = useState(null);
 
   useEffect(() => {
     const load = async () => {
-      // Get current user
+      //  current user
       const { data: { user } } = await supabase.auth.getUser();
       if (user) setCurrentUserId(user.id);
 
-      // Fetch profile
+      // fetch the profile
       const { data: profileData, error: profileError } = await supabase
         .from('profiles')
         .select('*')
@@ -56,7 +55,7 @@ export default function ProfilePage() {
       }
       setProfile(profileData);
 
-      // Fetch reviews for this profile
+      // fetch reviews
       const { data: reviewsData } = await supabase
         .from('reviews')
         .select('*, reviewer:reviewer_id(username, avatar_url, verified_student)')
@@ -64,12 +63,27 @@ export default function ProfilePage() {
         .order('created_at', { ascending: false });
 
       setReviews(reviewsData || []);
-      setLoading(false);
-    };
-    load();
-  }, [id]);
+      // fetch their services 
+        const { data: servicesData } = await supabase
+        .from('services')
+        .select('*')
+        .eq('provider_id', id)
+        .order('created_at', { ascending: false });
+        setServices(servicesData || []);
 
-  // ── Loading ──
+        // fetch portfolio 
+        const { data: portfolioData } = await supabase
+        .from('portfolio_items')
+        .select('*')
+        .eq('profile_id', id)
+        .order('created_at', { ascending: false });
+        setPortfolioItems(portfolioData || []);
+            setLoading(false);
+            };
+            load();
+        }, [id]);
+
+// a loading screen
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center"
@@ -82,7 +96,6 @@ export default function ProfilePage() {
     );
   }
 
-  // ── Not found ──
   if (!profile) {
     return (
       <div className="min-h-screen flex items-center justify-center"
@@ -106,8 +119,6 @@ export default function ProfilePage() {
   return (
     <div className="min-h-screen bg-neutral-100">
       <Header />
-
-      {/* ── Hero: Identity & Contact ── */}
       <section
         className="relative pt-24 pb-16 px-4 sm:px-6 lg:px-8"
         style={{ background: 'linear-gradient(135deg, #0047AB 0%, #6A0DAD 50%, #1E1E2E 100%)' }}
@@ -118,7 +129,7 @@ export default function ProfilePage() {
         <div className="max-w-4xl mx-auto relative z-10">
           <div className="flex flex-col sm:flex-row items-start gap-8">
 
-            {/* Avatar */}
+            {/* avatar/icon */}
             <div className="relative flex-shrink-0">
               <div className="w-32 h-32 sm:w-40 sm:h-40 rounded-full border-4 border-white/30 shadow-2xl overflow-hidden"
                 style={{ background: 'rgba(255,255,255,0.1)' }}>
@@ -130,10 +141,10 @@ export default function ProfilePage() {
               </div>
             </div>
 
-            {/* Identity */}
+            {/* person */}
             <div className="flex-1 pt-2">
 
-              {/* Name + Verified badge — RQ1 */}
+              {/* Name + verified badge */}
               <div className="flex items-center gap-3 mb-3 flex-wrap">
                 <h1 className="text-4xl sm:text-5xl text-white font-light tracking-wide">
                   {profile.full_name || `@${profile.username}`}
@@ -148,24 +159,24 @@ export default function ProfilePage() {
                 )}
               </div>
 
-              {/* Username */}
+              {/* username */}
               <p className="text-white/50 text-sm mb-2">@{profile.username}</p>
 
-              {/* Course + Year */}
+              {/* course + year */}
               {(profile.course || profile.year) && (
                 <p className="text-white/70 text-sm mb-4">
                   {[profile.course, profile.year].filter(Boolean).join(' · ')}
                 </p>
               )}
 
-              {/* Bio */}
+              {/* bio */}
               {profile.bio && profile.bio.trim() && (
                 <p className="text-white/85 text-base leading-relaxed mb-6">
                   {profile.bio}
                 </p>
               )}
 
-              {/* Skills */}
+              {/* skills tag section */}
               {skills.length > 0 && (
                 <div className="flex flex-wrap gap-2 mb-6">
                   {skills.map((skill) => (
@@ -178,7 +189,7 @@ export default function ProfilePage() {
                 </div>
               )}
 
-              {/* Contact links */}
+              {/* media links */}
               {(profile.instagram || profile.linkedin) && (
                 <div>
                   <p className="text-white/50 text-xs uppercase tracking-widest mb-3">
@@ -211,7 +222,7 @@ export default function ProfilePage() {
                 </div>
               )}
 
-              {/* Action buttons */}
+              {/*  buttons */}
               <div className="flex items-center gap-3 mt-6 flex-wrap">
                 {isOwnProfile ? (
                   <button onClick={() => navigate('/settings')}
@@ -232,38 +243,38 @@ export default function ProfilePage() {
         </div>
       </section>
 
-      {/* ── Trust Orb — RQ2 ── */}
+      {/*Trust Orb */}
       <section className="py-16 px-4 sm:px-6 lg:px-8"
         style={{ background: 'linear-gradient(135deg, #1E1E2E 0%, #6A0DAD 100%)' }}>
         <div className="max-w-4xl mx-auto">
           <div className="text-center mb-8">
             <h2 className="text-white/60 text-xs uppercase tracking-widest mb-2">Trust Dashboard</h2>
             <p className="text-white/40 text-sm">
-              Aggregated from {reviews.length} structured review{reviews.length !== 1 ? 's' : ''} across 3 attributes
+              Aggregated across our attributes
             </p>
           </div>
           <TrustOrb scores={scores} reviewCount={reviews.length} />
         </div>
       </section>
 
-      {/* ── Reviews & Portfolio Tabs ── */}
+      {/* the reviews & portfolio sections*/}
       <section className="py-12 px-4 sm:px-6 lg:px-8"
         style={{ background: 'linear-gradient(to right, #690DAB 0%, #decfe8 100%)' }}>
         <div className="max-w-4xl mx-auto">
 
           <div className="flex gap-4 mb-8">
-            {['reviews', 'portfolio'].map((tab) => (
+            {['reviews', 'services', 'portfolio'].map((tab) => (
               <button key={tab} onClick={() => setActiveTab(tab)}
                 className="px-6 py-2.5 rounded-full text-sm font-medium transition-all capitalize"
                 style={activeTab === tab
                   ? { background: 'linear-gradient(135deg, #0047AB, #6A0DAD)', color: 'white' }
                   : { background: 'rgba(255,255,255,0.6)', color: '#404040' }}>
-                {tab === 'reviews' ? `Reviews (${reviews.length})` : 'Portfolio'}
+               {tab === 'reviews' ? `Reviews (${reviews.length})`
+                : tab === 'services' ? `Services (${services.length})`
+                : 'Portfolio'}
               </button>
             ))}
           </div>
-
-          {/* Reviews tab — RQ3 */}
           {activeTab === 'reviews' && (
             <div>
               <h2 className="text-white text-2xl font-light mb-6">What Students Say</h2>
@@ -298,19 +309,111 @@ export default function ProfilePage() {
             </div>
           )}
 
-          {/* Portfolio tab */}
-          {activeTab === 'portfolio' && (
-            <div>
-              <h2 className="text-white text-2xl font-light mb-6">Portfolio</h2>
-              <div className="text-center py-12">
+          {/* services tab */}
+
+
+    {activeTab === 'services' && (
+        <div>
+            <h2 className="text-white text-2xl font-light mb-6">Services Offered</h2>
+            {services.length === 0 ? (
+            <div className="text-center py-12">
+                <i className="fa-solid fa-briefcase text-white/20 text-4xl mb-3 block" />
+                <p className="text-white/50 text-sm">No services posted yet.</p>
+                {isOwnProfile && (
+                <button onClick={() => navigate('/post-service')}
+                    className="mt-4 px-6 py-2 text-white text-sm rounded-full border border-white/30 hover:bg-white/10 transition-all">
+                    Post your first service
+                </button>
+                )}
+            </div>
+            ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {services.map((service) => (
+                <div key={service.id}
+                    className="bg-neutral-100 rounded-2xl p-5 border border-neutral-300 hover:shadow-lg transition-all">
+                    <div className="flex items-start justify-between mb-2">
+                    <h3 className="text-neutral-700 font-medium text-sm">{service.title}</h3>
+                    {service.price && (
+                        <span className="text-neutral-500 text-xs font-medium ml-2 flex-shrink-0">
+                        {service.price}
+                        </span>
+                    )}
+                    </div>
+                    <p className="text-neutral-500 text-xs leading-relaxed mb-3 line-clamp-2">
+                    {service.description}
+                    </p>
+                    <div className="flex items-center gap-2 flex-wrap">
+                    {service.category && (
+                        <span className="px-2 py-0.5 bg-white border border-neutral-200 text-neutral-500 text-xs rounded-full">
+                        {service.category}
+                        </span>
+                    )}
+                    {service.zone && (
+                        <span className="px-2 py-0.5 bg-white border border-neutral-200 text-neutral-500 text-xs rounded-full">
+                        {service.zone}
+                        </span>
+                    )}
+                    </div>
+                    {service.location && (
+                    <p className="text-neutral-400 text-xs mt-2">
+                        <i className="fa-solid fa-map-pin mr-1" />{service.location}
+                    </p>
+                    )}
+                </div>
+                ))}
+            </div>
+            )}
+        </div>
+    )}
+
+{/* portfolio tab */}
+
+
+        {activeTab === 'portfolio' && (
+        <div>
+            <h2 className="text-white text-2xl font-light mb-6">Portfolio</h2>
+            {portfolioItems.length === 0 ? (
+            <div className="text-center py-12">
                 <i className="fa-solid fa-images text-white/20 text-4xl mb-3 block" />
                 <p className="text-white/50 text-sm">No portfolio items yet.</p>
-              </div>
+                {isOwnProfile && (
+                <button onClick={() => navigate('/settings')}
+                    className="mt-4 px-6 py-2 text-white text-sm rounded-full border border-white/30 hover:bg-white/10 transition-all">
+                    Add portfolio photos in Settings
+                </button>
+                )}
             </div>
-          )}
+            ) : (
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+              
+{portfolioItems.map((item) => (
+  <div key={item.id}
+    onClick={() => setExpandedImage(item.image_url)}
+    className="aspect-square rounded-2xl overflow-hidden border border-neutral-300 hover:shadow-lg transition-all cursor-pointer">
+    <img src={item.image_url} alt="Portfolio"
+      className="w-full h-full object-cover hover:scale-105 transition-transform duration-300" />
+  </div>
+))}
 
+{/* expanding the image */}
+{expandedImage && (
+  <div
+    onClick={() => setExpandedImage(null)}
+    className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm cursor-pointer">
+    <img src={expandedImage} alt="Expanded"
+      className="max-w-3xl max-h-[90vh] rounded-2xl shadow-2xl object-contain" />
+    <button className="absolute top-6 right-6 text-white text-2xl">
+      <i className="fa-solid fa-xmark" />
+    </button>
+  </div>
+)}
+            </div>
+            )}
         </div>
-      </section>
-    </div>
-  );
+        )}
+
+                </div>
+            </section>
+            </div>
+        );
 }

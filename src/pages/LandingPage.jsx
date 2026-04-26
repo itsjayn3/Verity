@@ -1,11 +1,7 @@
-// LandingPage.jsx
-// First impression — sets up the three trust pillars (RQ1, RQ2, RQ3)
-// Includes scroll-triggered fade animations via Intersection Observer
-
 import { useNavigate } from 'react-router-dom';
 import { useEffect } from 'react';
 
-// ── Scroll animation hook ─────────────────────────────────────────────────────
+// scroll animations
 function useScrollReveal() {
   useEffect(() => {
     const style = document.createElement('style');
@@ -31,7 +27,7 @@ function useScrollReveal() {
       .reveal-right {
         opacity: 0;
         transform: translateX(32px);
-        transition: opacity 0.7s ease, transform 0.7s ease;
+        transition: opacity 0.7s ease, transform 0.7s ease; 
       }
       .reveal-right.visible {
         opacity: 1;
@@ -84,28 +80,28 @@ function useScrollReveal() {
   }, []);
 }
 
-// ── Data ──────────────────────────────────────────────────────────────────────
+// verity's features description
 const TRUST_PILLARS = [
   {
     icon: 'fa-solid fa-shield-halved',
     title: 'Verified Identities',
-    desc: 'Every member is verified through their @aston.ac.uk email — no anonymous accounts.',
-    gradient: 'linear-gradient(135deg, #0047AB, #00D4FF)',
-    rq: 'RQ1',
+    desc: 'Every member is verified through their @aston.ac.uk email, no anonymous accounts.',
+    gradient: 'linear-gradient(135deg, #0047AB, #00D4FF)'
+    
   },
   {
     icon: 'fa-solid fa-gem',
     title: 'Trust Orb',
     desc: 'Visual reputation scores aggregated from structured, attribute-based reviews.',
-    gradient: 'linear-gradient(135deg, #6A0DAD, #C77DFF)',
-    rq: 'RQ2',
+    gradient: 'linear-gradient(135deg, #6A0DAD, #C77DFF)'
+    
   },
   {
     icon: 'fa-solid fa-star-half-stroke',
     title: 'Structured Reviews',
-    desc: 'Ratings for punctuality, quality, and communication — not vague free-text feedback.',
-    gradient: 'linear-gradient(135deg, #00B4D8, #0047AB)',
-    rq: 'RQ3',
+    desc: 'Ratings for punctuality, quality, and communication - not vague free-text feedback.',
+    gradient: 'linear-gradient(135deg, #00B4D8, #0047AB)'
+    
   },
 ];
 
@@ -128,19 +124,19 @@ const HOW_IT_WORKS = [
     step: '03',
     icon: 'fa-solid fa-magnifying-glass',
     title: 'Browse the Campus Feed',
-    desc: 'Discover services from verified students. Filter by location — public zones, student living, or remote.',
+    desc: 'Discover services from verified students. Filter by location - public zones, student living, or remote.',
     gradient: 'linear-gradient(135deg, #00B4D8, #0047AB)',
   },
   {
     step: '04',
     icon: 'fa-solid fa-circle-nodes',
     title: 'Evaluate with the Trust Orb',
-    desc: 'View any student\'s Trust Orb — an aggregated visual of their punctuality, quality, and communication.',
+    desc: 'View any student\'s Trust Orb - an aggregated visual of their punctuality, quality, and communication.',
     gradient: 'linear-gradient(135deg, #0047AB, #6A0DAD)',
   },
 ];
 
-// ── Page ─────────────────────────────────────────────────────────────────────
+// code for the landing page
 export default function LandingPage() {
   const navigate = useNavigate();
   useScrollReveal();
@@ -148,7 +144,7 @@ export default function LandingPage() {
   return (
     <div className="min-h-screen overflow-x-hidden">
 
-      {/* ── Header ── */}
+      {/* header */}
       <header
         className="fixed top-0 left-0 right-0 z-50 border-b border-white/20"
         style={{ background: 'rgba(255,255,255,0.08)', backdropFilter: 'blur(20px)' }}
@@ -165,8 +161,6 @@ export default function LandingPage() {
           </div>
         </div>
       </header>
-
-      {/* ── Hero ── */}
       <section
         className="relative min-h-screen flex items-center justify-center overflow-hidden"
         style={{
@@ -230,7 +224,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ── How It Works ── */}
+      {/* instructions */}
       <section
         className="relative py-24 px-4 sm:px-6 lg:px-8"
         style={{
@@ -281,7 +275,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ── CTA Cards ── */}
+      {/* cards */}
       <section
         className="relative py-24 px-4 sm:px-6 lg:px-8"
         style={{
@@ -363,7 +357,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ── Why Students Trust Verity ── */}
+      {/* tagline for why students should trust verity */}
       <section
         className="relative py-24 px-4 sm:px-6 lg:px-8"
         style={{
@@ -405,7 +399,6 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ── Final CTA ── */}
       <section
         className="relative py-24 px-4 sm:px-6 lg:px-8"
         style={{ background: 'linear-gradient(180deg, #000000 0%, #0a0a1a 100%)' }}

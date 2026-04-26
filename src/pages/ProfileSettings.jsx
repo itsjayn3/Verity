@@ -1,8 +1,3 @@
-// ProfileSettings.jsx
-// Authenticated user edits their own profile
-// Pulls real data from Supabase profiles table
-// Saves updates back to Supabase
-
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
@@ -37,7 +32,6 @@ export default function ProfileSettings() {
   const [reviewCount, setReviewCount] = useState(0);
   const [trustScores, setTrustScores] = useState({ punctuality: 0, quality: 0, communication: 0 });
 
-  // Form fields
   const [username, setUsername] = useState('');
   const [fullName, setFullName] = useState('');
   const [bio, setBio] = useState('');
@@ -49,8 +43,11 @@ export default function ProfileSettings() {
   const [linkedin, setLinkedin] = useState('');
   const [avatarPreview, setAvatarPreview] = useState(null);
   const [userId, setUserId] = useState(null);
+  const [portfolioItems, setPortfolioItems] = useState([]);
+  const [portfolioUploading, setPortfolioUploading] = useState(false);
 
-  // ── Load profile on mount ──
+  // loading screen
+
   useEffect(() => {
     const load = async () => {
       const { data: { user } } = await supabase.auth.getUser();
@@ -58,8 +55,7 @@ export default function ProfileSettings() {
 
       setUserEmail(user.email);
       setUserId(user.id);
-
-      // Fetch profile
+////////////////////////////////////////////////////////////////////////
       const { data: profile } = await supabase
         .from('profiles')
         .select('*')
@@ -78,7 +74,19 @@ export default function ProfileSettings() {
         setAvatarPreview(profile.avatar_url || null);
       }
 
-      // Fetch reviews for Trust Orb
+      // fetch portfolio items
+      
+        const { data: portfolioData } = await supabase
+        .from('portfolio_items')
+        .select('*')
+        .eq('profile_id', user.id)
+        .order('created_at', { ascending: false });
+        setPortfolioItems(portfolioData || []);
+
+
+
+
+      // fetch reviews
       const { data: reviews } = await supabase
         .from('reviews')
         .select('punctuality_rating, quality_rating, communication_rating')
@@ -99,7 +107,7 @@ export default function ProfileSettings() {
     load();
   }, [navigate]);
 
-  // ── Skills ──
+  // skills section
   const addSkill = (skill) => {
     const trimmed = skill.trim();
     if (trimmed && !skills.includes(trimmed)) setSkills([...skills, trimmed]);
@@ -107,12 +115,12 @@ export default function ProfileSettings() {
   };
   const removeSkill = (skill) => setSkills(skills.filter((s) => s !== skill));
 
-  // ── Avatar ──
+  // icon/avatar
   const handleAvatarChange = async (e) => {
     let file = e.target.files[0];
     if (!file || !userId) return;
 
-    // Convert HEIC to JPEG if needed (iPhone photos)
+    // converts to JPEG
     if (file.type === 'image/heic' || file.name.toLowerCase().endsWith('.heic')) {
       try {
         const converted = await heic2any({ blob: file, toType: 'image/jpeg', quality: 0.8 });
@@ -123,7 +131,6 @@ export default function ProfileSettings() {
       }
     }
 
-    // Show local preview immediately
     setAvatarPreview(URL.createObjectURL(file));
 
     const fileExt = file.name.split('.').pop();
@@ -139,12 +146,43 @@ export default function ProfileSettings() {
       return;
     }
 
-    // Get real public URL and replace blob preview
+    //get public URL
     const { data } = supabase.storage.from('avatars').getPublicUrl(filePath);
     setAvatarPreview(data.publicUrl);
   };
 
-  // ── Save ──
+// portfolio upload
+const handlePortfolioUpload = async (e) => {
+  const file = e.target.files[0];
+  if (!file || !userId) return;
+  setPortfolioUploading(true);
+  const fileExt = file.name.split('.').pop();
+  const filePath = `portfolio/${userId}/${Date.now()}.${fileExt}`;
+  const { error: uploadError } = await supabase.storage
+    .from('avatars')
+    .upload(filePath, file, { upsert: true });
+  if (uploadError) {
+    setError('Failed to upload: ' + uploadError.message);
+    setPortfolioUploading(false);
+    return;
+  }
+  const { data } = supabase.storage.from('avatars').getPublicUrl(filePath);
+  const { error: insertError } = await supabase
+    .from('portfolio_items')
+    .insert({ profile_id: userId, image_url: data.publicUrl });
+  if (!insertError) {
+    setPortfolioItems((prev) => [...prev, { id: Date.now(), image_url: data.publicUrl }]);
+  }
+  setPortfolioUploading(false);
+};
+
+// portfolio delete
+const handlePortfolioDelete = async (item) => {
+  await supabase.from('portfolio_items').delete().eq('id', item.id);
+  setPortfolioItems((prev) => prev.filter((p) => p.id !== item.id));
+};
+
+  // saving message
   const handleSave = async () => {
     setError('');
     setSuccessMsg('');
@@ -178,7 +216,7 @@ export default function ProfileSettings() {
     setSaving(false);
   };
 
-  // ── Loading ──
+  // another loading screen
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center"
@@ -194,8 +232,6 @@ export default function ProfileSettings() {
   return (
     <div className="min-h-screen bg-neutral-100">
       <Header />
-
-      {/* ── Hero ── */}
       <section
         className="relative pt-24 pb-12 px-4 sm:px-6 lg:px-8"
         style={{ background: 'linear-gradient(135deg, #0047AB 0%, #6A0DAD 50%, #1E1E2E 100%)' }}
@@ -217,7 +253,7 @@ export default function ProfileSettings() {
       >
         <div className="max-w-4xl mx-auto space-y-8">
 
-          {/* ── Trust Orb (read-only) ── */}
+          {/* Trust Orb */}
           <div
             className="rounded-3xl p-8 border border-white/20"
             style={{ background: 'linear-gradient(135deg, #1E1E2E 0%, #6A0DAD 100%)' }}
@@ -242,10 +278,10 @@ export default function ProfileSettings() {
             </div>
           </div>
 
-          {/* ── Edit Form ── */}
+          {/* make an edit */}
           <div className="bg-neutral-100 rounded-3xl shadow-2xl border border-neutral-300 p-8 sm:p-10">
 
-            {/* Error / Success */}
+            {/* error / it worked */}
             {error && (
               <div className="mb-6 p-3 bg-red-50 border border-red-200 rounded-xl flex items-start gap-2">
                 <i className="fa-solid fa-circle-exclamation text-red-500 text-sm mt-0.5 flex-shrink-0" />
@@ -259,7 +295,7 @@ export default function ProfileSettings() {
               </div>
             )}
 
-            {/* Avatar */}
+            {/* avatar/icon */}
             <div className="mb-8">
               <label className="block text-neutral-700 text-lg font-semibold mb-4">
                 Profile Picture
@@ -289,7 +325,7 @@ export default function ProfileSettings() {
               </div>
             </div>
 
-            {/* Username */}
+            {/* username */}
             <div className="mb-6">
               <label className="block text-neutral-700 font-semibold text-sm mb-2">Username</label>
               <div className="relative">
@@ -300,7 +336,7 @@ export default function ProfileSettings() {
               </div>
             </div>
 
-            {/* Full Name */}
+            {/* name */}
             <div className="mb-6">
               <label className="block text-neutral-700 font-semibold text-sm mb-2">Full Name</label>
               <input type="text" value={fullName} onChange={(e) => setFullName(e.target.value)}
@@ -308,7 +344,7 @@ export default function ProfileSettings() {
                 className="w-full px-4 py-3 bg-white border border-neutral-300 rounded-xl text-neutral-700 placeholder-neutral-400 focus:outline-none focus:border-neutral-500 transition-all text-sm" />
             </div>
 
-            {/* University Email (read-only) */}
+            {/* university email (cannot edit) */}
             <div className="mb-6">
               <label className="block text-neutral-700 font-semibold text-sm mb-2">University Email</label>
               <div className="relative">
@@ -321,7 +357,7 @@ export default function ProfileSettings() {
               </div>
             </div>
 
-            {/* Bio */}
+            {/* bio */}
             <div className="mb-6">
               <label className="block text-neutral-700 font-semibold text-sm mb-2">Bio</label>
               <textarea rows={4} value={bio} onChange={(e) => setBio(e.target.value.slice(0, 500))}
@@ -333,7 +369,7 @@ export default function ProfileSettings() {
               </div>
             </div>
 
-            {/* Course */}
+            {/*course */}
             <div className="mb-6">
               <label className="block text-neutral-700 font-semibold text-sm mb-2">Course / Degree</label>
               <div className="relative">
@@ -344,7 +380,7 @@ export default function ProfileSettings() {
               </div>
             </div>
 
-            {/* Year */}
+            {/* year of study */}
             <div className="mb-6">
               <label className="block text-neutral-700 font-semibold text-sm mb-2">Year of Study</label>
               <div className="grid grid-cols-3 sm:grid-cols-6 gap-3">
@@ -361,7 +397,7 @@ export default function ProfileSettings() {
               </div>
             </div>
 
-            {/* Skills */}
+            {/* skills section */}
             <div className="mb-8">
               <label className="block text-neutral-700 font-semibold text-sm mb-2">Skills & Services</label>
               <div className="flex flex-wrap gap-2 mb-3">
@@ -396,7 +432,7 @@ export default function ProfileSettings() {
               </div>
             </div>
 
-            {/* Social Links */}
+            {/* medialLinks */}
             <div className="mb-8">
               <label className="block text-neutral-700 font-semibold text-sm mb-1">Contact Links</label>
               <p className="text-neutral-400 text-xs mb-3">
@@ -418,7 +454,36 @@ export default function ProfileSettings() {
               </div>
             </div>
 
-            {/* Save */}
+{/* portfolio upload section */}
+<div className="mb-8">
+  <label className="block text-neutral-700 font-semibold text-sm mb-2">Portfolio</label>
+  <p className="text-neutral-400 text-xs mb-4">
+    Upload photos of your work — these appear on your public profile.
+  </p>
+  {portfolioItems.length > 0 && (
+    <div className="grid grid-cols-3 gap-3 mb-4">
+      {portfolioItems.map((item) => (
+        <div key={item.id} className="relative group aspect-square rounded-xl overflow-hidden border border-neutral-200">
+          <img src={item.image_url} alt="Portfolio"
+            className="w-full h-full object-cover" />
+          <button
+            onClick={() => handlePortfolioDelete(item)}
+            className="absolute top-1 right-1 w-6 h-6 bg-red-500 text-white rounded-full text-xs opacity-0 group-hover:opacity-100 transition-all flex items-center justify-center">
+            <i className="fa-solid fa-times" />
+          </button>
+        </div>
+      ))}
+    </div>
+  )}
+  <label className="inline-block px-5 py-2.5 bg-white border border-neutral-200 rounded-xl text-neutral-700 text-sm cursor-pointer hover:bg-neutral-100 transition-all">
+    {portfolioUploading
+      ? <><i className="fa-solid fa-spinner fa-spin mr-2" />Uploading...</>
+      : <><i className="fa-solid fa-plus mr-2" />Add Photo</>}
+    <input type="file" accept="image/*" className="hidden"
+      onChange={handlePortfolioUpload} disabled={portfolioUploading} />
+  </label>
+</div>
+
             <div className="flex flex-col sm:flex-row gap-3">
               <button onClick={handleSave} disabled={saving}
                 className="flex-1 py-4 text-white rounded-xl font-semibold transition-all text-sm"
@@ -434,6 +499,6 @@ export default function ProfileSettings() {
           </div>
         </div>
       </section>
-    </div>
+      </div>
   );
 }

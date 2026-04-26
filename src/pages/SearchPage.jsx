@@ -1,7 +1,3 @@
-// SearchPage.jsx — Campus Feed
-// Fetches real services from Supabase, joined with provider profile data
-// Supports search by title/description and filter by zone
-
 import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
@@ -35,7 +31,7 @@ function ServiceCard({ service, onViewProfile }) {
     <div className="bg-neutral-100 rounded-2xl overflow-hidden hover:shadow-2xl transition-all border border-neutral-300 flex flex-col">
       <div className="p-6 flex flex-col flex-1">
 
-        {/* Avatar + Title */}
+        {/* avatar icon */}
         <div className="flex items-start justify-between mb-4">
           <div className="flex items-center space-x-3">
             <img
@@ -56,12 +52,12 @@ function ServiceCard({ service, onViewProfile }) {
           )}
         </div>
 
-        {/* Description */}
+        {/* desc */}
         <p className="text-neutral-600 text-sm leading-relaxed mb-4 line-clamp-2 flex-1">
           {description}
         </p>
 
-        {/* Tags */}
+        {/* skills */}
         <div className="flex flex-wrap gap-2 mb-5">
           {category && (
             <span className="px-3 py-1 bg-white text-neutral-600 text-xs rounded-full border border-neutral-200">
@@ -75,7 +71,7 @@ function ServiceCard({ service, onViewProfile }) {
           )}
         </div>
 
-        {/* Price + provider */}
+        {/* price + provider name */}
         <div className="flex items-center justify-between text-sm text-neutral-600 mb-5">
           {price && (
             <span className="flex items-center gap-1">
@@ -88,7 +84,7 @@ function ServiceCard({ service, onViewProfile }) {
           )}
         </div>
 
-        {/* Location + button */}
+        {/* location + view profile button */}
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-2 text-neutral-600 text-sm">
             <i className="fa-solid fa-map-pin text-xs" />
@@ -158,8 +154,6 @@ export default function SearchPage() {
   return (
     <div className="w-full min-h-screen bg-neutral-100">
       <Header />
-
-      {/* Hero */}
       <section
         className="relative pt-24 pb-8 px-4 sm:px-6 lg:px-8"
         style={{ background: 'linear-gradient(135deg, #0047AB 0%, #6A0DAD 50%, #1E1E2E 100%)' }}
@@ -189,7 +183,7 @@ export default function SearchPage() {
         </div>
       </section>
 
-      {/* Grid */}
+      {/* grid of service cards */}
       <section
         className="relative py-12 px-4 sm:px-6 lg:px-8"
         style={{ background: 'linear-gradient(to right, #690DAB 0%, #decfe8 100%)' }}

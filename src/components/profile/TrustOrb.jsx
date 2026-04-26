@@ -1,7 +1,3 @@
-// TrustOrb.jsx
-// Visual trust indicator — radial ring (overall score) + 3 attribute ratings
-// Addresses RQ2: Visual trust cues reducing user uncertainty
-
 const ATTRIBUTES = [
   { key: 'punctuality', label: 'Punctuality', icon: 'fa-solid fa-clock' },
   { key: 'quality', label: 'Quality', icon: 'fa-solid fa-star' },
@@ -36,23 +32,23 @@ export default function TrustOrb({ scores = {}, reviewCount = 0 }) {
       ? ((punctuality + quality + communication) / 3).toFixed(1)
       : null;
 
-  // Radial ring: circumference of r=90 circle = 2π×90 ≈ 565.48
+  // radial ring: r=90 circum= 565.48
   const circumference = 565.48;
   const progress = overall ? (parseFloat(overall) / 5) * circumference : 0;
   const dashOffset = circumference - progress;
 
   return (
     <div className="flex flex-col items-center">
-      {/* Label */}
+      {/* label */}
       <div className="mb-4 text-center">
         <span className="text-white/60 text-xs uppercase tracking-widest">
           Trust Orb
         </span>
       </div>
 
-      {/* Orb */}
+      {/* the orb */}
       <div className="relative w-64 h-64 sm:w-80 sm:h-80">
-        {/* Radial ring SVG */}
+        {/* the ring SVG */}
         <svg
           viewBox="0 0 200 200"
           className="absolute inset-0 w-full h-full -rotate-90"
@@ -70,14 +66,17 @@ export default function TrustOrb({ scores = {}, reviewCount = 0 }) {
               </feMerge>
             </filter>
           </defs>
-          {/* Background track */}
+
+          {/*background */}
           <circle
             cx="100" cy="100" r="90"
             fill="none"
             stroke="rgba(255,255,255,0.1)"
             strokeWidth="10"
           />
-          {/* Progress ring */}
+
+
+          {/* radial progression circle */}
           {overall && (
             <circle
               cx="100" cy="100" r="90"
@@ -92,20 +91,19 @@ export default function TrustOrb({ scores = {}, reviewCount = 0 }) {
           )}
         </svg>
 
-        {/* Overall score in top of ring */}
+        {/* score on the top of the ring */}
         {overall && (
-          <div className="absolute top-3 left-1/2 -translate-x-1/2 text-center">
+        <div className="absolute top-10 left-1/2 -translate-x-1/2 text-center z-10">
             <span
-              className="text-white text-3xl sm:text-4xl font-light"
-              style={{ filter: 'drop-shadow(0 0 12px rgba(255,255,255,0.7))' }}
+            className="text-white text-3xl sm:text-4xl font-light"
+            style={{ filter: 'drop-shadow(0 0 12px rgba(255,255,255,0.7))' }}
             >
-              {overall}
+            {overall}
             </span>
-            <span className="text-white/50 text-xs block">/ 5.0</span>
-          </div>
+        </div>
         )}
 
-        {/* Inner circle with attribute scores */}
+        {/* attribute scores inside ring*/}
         <div
           className="absolute inset-0 flex items-center justify-center"
           style={{ padding: '14%' }}
@@ -135,7 +133,7 @@ export default function TrustOrb({ scores = {}, reviewCount = 0 }) {
         </div>
       </div>
 
-      {/* Review count */}
+      {/* review number */}
       <p className="text-white/50 text-xs mt-3">
         {reviewCount > 0 ? `Based on ${reviewCount} review${reviewCount !== 1 ? 's' : ''}` : 'Be the first to review'}
       </p>
