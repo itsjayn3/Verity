@@ -1,4 +1,3 @@
-// src/pages/TestSupabase.jsx
 import { useEffect } from "react";
 import { supabase } from "../supabaseClient";
 

@@ -1,5 +1,3 @@
-// ReviewCard.jsx — RQ3: structured attribute-based reviews
-
 const ATTRIBUTES = [
   { key: 'punctuality', label: 'Punctuality' },
   { key: 'quality', label: 'Quality' },
@@ -32,7 +30,7 @@ export default function ReviewCard({ review }) {
 
   return (
     <div className="bg-neutral-100 rounded-2xl p-6 border border-neutral-300 hover:shadow-xl transition-all">
-      {/* Reviewer */}
+      {/* reviewer */}
       <div className="flex items-start justify-between mb-4">
         <div className="flex items-center gap-3">
           <img
@@ -54,7 +52,7 @@ export default function ReviewCard({ review }) {
         </div>
       </div>
 
-      {/* Attribute scores — RQ3 */}
+      {/* scores */}
       <div className="grid grid-cols-3 gap-3 mb-4 p-3 bg-white rounded-xl border border-neutral-200">
         {ATTRIBUTES.map(({ key, label }) => (
           <div key={key} className="flex flex-col items-center gap-1">
@@ -65,7 +63,7 @@ export default function ReviewCard({ review }) {
         ))}
       </div>
 
-      {/* Comment */}
+      {/* user's comment */}
       {comment && (
         <p className="text-neutral-600 text-sm leading-relaxed">{comment}</p>
       )}

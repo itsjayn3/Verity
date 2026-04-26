@@ -1,6 +1,3 @@
-// Step-by-step structured review — one attribute per screen
-// Reduces cognitive load, forces deliberate honest ratings (RQ3)
-
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
@@ -35,7 +32,7 @@ const STEPS = [
 
 
 
-// ── Star Rating ───────────────────────────────────────────────────────────────
+// star rating styling
 function StarRating({ value, onChange }) {
   const [hovered, setHovered] = useState(0);
   const active = hovered || value;
@@ -71,7 +68,7 @@ function StarRating({ value, onChange }) {
   );
 }
 
-// ── Page ──────────────────────────────────────────────────────────────────────
+////////////////////////////////////////////////////////////////////////
 export default function LeaveReview() {
   const { userId } = useParams();
   const navigate = useNavigate();
@@ -83,12 +80,12 @@ export default function LeaveReview() {
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState('');
 
-  // Survey state
+  // review form state
   const [step, setStep] = useState(0); // 0-2 = attribute steps, 3 = comment, 4 = done
   const [ratings, setRatings] = useState({ punctuality: 0, quality: 0, communication: 0 });
   const [comment, setComment] = useState('');
 
-  // ── Load ──
+  //loading 
   useEffect(() => {
     const load = async () => {
       const { data: { user } } = await supabase.auth.getUser();
@@ -115,14 +112,14 @@ export default function LeaveReview() {
     return Math.round(vals.reduce((a, b) => a + b, 0) / vals.length);
   };
 
-  // ── Next step ──
+  //go to next q
   const handleNext = () => {
     const currentKey = STEPS[step]?.key;
     if (ratings[currentKey] === 0) return; // must rate before continuing
     setStep((s) => s + 1);
   };
 
-  // ── Submit ──
+  //submit button
   const handleSubmit = async () => {
     if (!currentUser) { setError('You must be logged in.'); return; }
     if (currentUser.id === userId) { setError("You can't review yourself."); return; }
@@ -153,7 +150,7 @@ export default function LeaveReview() {
     setSubmitting(false);
   };
 
-  // ── Loading ──
+  // loading
   if (loadingPage) {
     return (
       <div className="min-h-screen flex items-center justify-center"
@@ -166,7 +163,7 @@ export default function LeaveReview() {
     );
   }
 
-  // ── Success ──
+  // submitted successfully
   if (submitted) {
     return (
       <div className="min-h-screen flex items-center justify-center px-4"
@@ -213,7 +210,7 @@ export default function LeaveReview() {
       <div className="min-h-screen flex flex-col items-center justify-center px-4 pt-20 pb-12">
         <div className="w-full max-w-lg">
 
-          {/* Reviewee identity */}
+          {/* reviewee's name  */}
           {reviewee && (
             <div className="flex items-center justify-center gap-3 mb-10">
               <img
@@ -233,7 +230,7 @@ export default function LeaveReview() {
             </div>
           )}
 
-          {/* Error */}
+          {/* error message */}
           {error && (
             <div className="mb-6 p-3 bg-red-500/10 border border-red-400/30 rounded-xl flex items-start gap-2">
               <i className="fa-solid fa-circle-exclamation text-red-400 text-sm mt-0.5 flex-shrink-0" />
@@ -241,22 +238,22 @@ export default function LeaveReview() {
             </div>
           )}
 
-          {/* ── Attribute step ── */}
+          {/* attributes */}
           {isAttributeStep && currentStep && (
             <div className="text-center">
-              {/* Icon */}
+              {/* svg icon */}
               <div className="w-20 h-20 rounded-2xl flex items-center justify-center mx-auto mb-8 shadow-xl"
                 style={{ background: currentStep.gradient }}>
                 <i className={`${currentStep.icon} text-white text-3xl`} />
               </div>
 
-              {/* Question */}
+              {/* question */}
               <h2 className="text-3xl sm:text-4xl text-white font-light mb-3">
                 {currentStep.question}
               </h2>
               <p className="text-white/50 text-sm mb-12">{currentStep.subtext}</p>
 
-              {/* Stars */}
+              {/* star system  */}
               <div className="mb-12">
                 <StarRating
                   value={currentRating}
@@ -264,7 +261,7 @@ export default function LeaveReview() {
                 />
               </div>
 
-              {/* Next button */}
+              {/* next button */}
               <button
                 onClick={handleNext}
                 disabled={currentRating === 0}
@@ -282,7 +279,7 @@ export default function LeaveReview() {
             </div>
           )}
 
-          {/* ── Comment step ── */}
+          {/*optional comment */}
           {isCommentStep && (
             <div className="text-center">
               <div className="w-20 h-20 rounded-2xl flex items-center justify-center mx-auto mb-8 shadow-xl"
@@ -334,7 +331,7 @@ export default function LeaveReview() {
             </div>
           )}
 
-          {/* ── Pagination dots ── */}
+          {/* pagination below steps */}
           <div className="flex items-center justify-center gap-3 mt-10">
             {[...STEPS, { key: 'comment' }].map((s, i) => (
               <div

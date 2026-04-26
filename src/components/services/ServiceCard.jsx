@@ -68,7 +68,7 @@ export default function ServiceCard({ service }) {
           </div>
         )}
 
-        {/* Footer: location + action */}
+        {/* footer: location + action */}
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-2 text-neutral-600 text-sm">
             <i className="fa-solid fa-map-pin text-xs" />

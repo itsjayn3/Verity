@@ -1,7 +1,3 @@
-// AuthPage.jsx
-// Login + Sign up with @aston.ac.uk domain restriction
-// After login: checks if profile exists → routes to /complete-profile or /services
-
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
@@ -53,7 +49,11 @@ export default function AuthPage() {
       if (signInError) {
         setError(signInError.message);
       } else {
-        // Check if profile exists — if not, prompt setup
+
+
+        // checks if the profile exists if not then user has to setup
+
+
         const { data: profile } = await supabase
           .from('profiles')
           .select('id, username')
@@ -98,8 +98,7 @@ export default function AuthPage() {
 
   return (
     <div className="min-h-screen flex">
-
-      {/* ── Left branding panel ── */}
+      // css styling
       <div
         className="hidden lg:flex lg:w-1/2 relative overflow-hidden flex-col justify-center items-center text-center text-white p-12"
         style={{ background: 'linear-gradient(135deg, #0047AB 0%, #6A0DAD 60%, #1E1E2E 100%)' }}
@@ -135,7 +134,7 @@ export default function AuthPage() {
         </div>
       </div>
 
-      {/* ── Right: Auth form ── */}
+      {/*login /sign up form on the right */}
       <div className="w-full lg:w-1/2 flex items-center justify-center p-6 lg:p-12 bg-neutral-50">
         <div className="w-full max-w-md">
 
@@ -146,7 +145,7 @@ export default function AuthPage() {
 
           <div className="bg-white rounded-2xl shadow-xl border border-neutral-100 p-8">
 
-            {/* Tabs */}
+            {/* toggle between login or signup */}
             <div className="flex bg-neutral-100 rounded-xl p-1 mb-8">
               {['Log In', 'Sign Up'].map((tab) => {
                 const active = (tab === 'Log In') === isLogin;
@@ -186,7 +185,7 @@ export default function AuthPage() {
 
             <div className="space-y-5">
 
-              {/* Email */}
+              {/* input email */}
               <div>
                 <label className="block text-sm font-medium text-neutral-700 mb-1.5">University Email</label>
                 <div className="relative">
@@ -207,7 +206,7 @@ export default function AuthPage() {
                 </p>
               </div>
 
-              {/* Password */}
+              {/* input password */}
               <div>
                 <label className="block text-sm font-medium text-neutral-700 mb-1.5">Password</label>
                 <div className="relative">
@@ -226,7 +225,7 @@ export default function AuthPage() {
                 </div>
               </div>
 
-              {/* Forgot password */}
+              {/* forgot password */}
               {isLogin && (
                 <div className="text-right">
                   <button onClick={handleForgotPassword}
@@ -236,7 +235,7 @@ export default function AuthPage() {
                 </div>
               )}
 
-              {/* Submit */}
+              {/*submit button */}
               <button onClick={handleSubmit} disabled={loading}
                 className="w-full py-3 text-white rounded-xl font-medium transition-all text-sm"
                 style={{
