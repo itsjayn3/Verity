@@ -425,20 +425,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ── Footer ── */}
-      <footer className="py-8 px-4 border-t border-white/10" style={{ background: '#0a0a0a' }}>
-        <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
-          <p className="text-white/20 text-xs">© 2025 Verity · Aston University</p>
-          <div className="flex gap-6">
-            {['Privacy', 'Terms', 'Contact'].map((link) => (
-              <a key={link} href="#" className="text-white/30 text-xs hover:text-white/60 transition-colors">
-                {link}
-              </a>
-            ))}
-          </div>
-        </div>
-      </footer>
-
+      
     </div>
   );
 }

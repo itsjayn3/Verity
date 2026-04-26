@@ -1,7 +1,3 @@
-// CompleteProfile.jsx
-// New user profile setup — saves to Supabase profiles table
-// Triggered after first login when no profile exists
-
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Header from '../components/layout/Header';
@@ -34,7 +30,6 @@ export default function CompleteProfile() {
   const [selectedYear, setSelectedYear] = useState(null);
   const [skills, setSkills] = useState([]);
   const [skillInput, setSkillInput] = useState('');
-  const [agreed, setAgreed] = useState(false);
   const [avatarPreview, setAvatarPreview] = useState(null);
   const [instagram, setInstagram] = useState('');
   const [linkedin, setLinkedin] = useState('');
@@ -70,7 +65,7 @@ export default function CompleteProfile() {
     let file = e.target.files[0];
     if (!file) return;
 
-    // Convert HEIC to JPEG if needed (iPhone photos)
+    // convert HEIC to JPEG if needed (iPhone photos)
     if (file.type === 'image/heic' || file.name.toLowerCase().endsWith('.heic')) {
       try {
         const converted = await heic2any({ blob: file, toType: 'image/jpeg', quality: 0.8 });
@@ -99,7 +94,6 @@ export default function CompleteProfile() {
   };
 
   const handleSubmit = async () => {
-    if (!agreed) return;
     if (!username.trim()) { setError('Please enter a username.'); return; }
     if (!userId) { setError('Not authenticated.'); return; }
 
@@ -134,8 +128,6 @@ export default function CompleteProfile() {
   return (
     <div className="min-h-screen bg-neutral-100">
       <Header />
-
-      {/* Hero */}
       <section className="relative pt-24 pb-8 px-4 sm:px-6 lg:px-8"
         style={{ background: 'linear-gradient(135deg, #0047AB 0%, #6A0DAD 50%, #1E1E2E 100%)' }}>
         <div className="absolute inset-0 pointer-events-none"
@@ -153,7 +145,7 @@ export default function CompleteProfile() {
         </div>
       </section>
 
-      {/* Form */}
+      {/* form */}
       <section className="py-12 px-4 sm:px-6 lg:px-8"
         style={{ background: 'linear-gradient(to right, #690DAB 0%, #decfe8 100%)' }}>
         <div className="max-w-3xl mx-auto">
@@ -166,7 +158,7 @@ export default function CompleteProfile() {
               </div>
             )}
 
-            {/* Avatar */}
+            {/*avatar/icon */}
             <div className="mb-10">
               <label className="block text-neutral-700 text-lg font-semibold mb-4">Profile Picture</label>
               <div className="flex flex-col sm:flex-row items-center gap-6">
@@ -194,7 +186,7 @@ export default function CompleteProfile() {
               </div>
             </div>
 
-            {/* Username */}
+            {/*username */}
             <div className="mb-8">
               <label className="block text-neutral-700 text-lg font-semibold mb-3">Username</label>
               <div className="relative">
@@ -206,7 +198,7 @@ export default function CompleteProfile() {
               <p className="text-neutral-500 text-sm mt-2">Choose a unique username for your profile</p>
             </div>
 
-            {/* Full Name */}
+            {/* name */}
             <div className="mb-8">
               <label className="block text-neutral-700 text-lg font-semibold mb-3">Full Name</label>
               <input type="text" value={fullName} onChange={(e) => setFullName(e.target.value)}
@@ -214,7 +206,7 @@ export default function CompleteProfile() {
                 className="w-full px-4 py-4 bg-white border border-neutral-300 rounded-xl text-neutral-700 placeholder-neutral-400 focus:outline-none focus:border-neutral-500 transition-all shadow-sm" />
             </div>
 
-            {/* Email (read-only) */}
+            {/* email (cannot edit it) */}
             <div className="mb-8">
               <label className="block text-neutral-700 text-lg font-semibold mb-3">University Email</label>
               <div className="relative">
@@ -227,7 +219,7 @@ export default function CompleteProfile() {
               </div>
             </div>
 
-            {/* Bio */}
+            {/* bio */}
             <div className="mb-8">
               <label className="block text-neutral-700 text-lg font-semibold mb-3">Bio</label>
               <textarea rows={5} value={bio}
@@ -240,7 +232,7 @@ export default function CompleteProfile() {
               </div>
             </div>
 
-            {/* Course */}
+            {/* course */}
             <div className="mb-8">
               <label className="block text-neutral-700 text-lg font-semibold mb-3">Course / Degree</label>
               <div className="relative">
@@ -251,7 +243,7 @@ export default function CompleteProfile() {
               </div>
             </div>
 
-            {/* Year */}
+            {/* year of study */}
             <div className="mb-8">
               <label className="block text-neutral-700 text-lg font-semibold mb-3">Year of Study</label>
               <div className="grid grid-cols-3 sm:grid-cols-6 gap-3">
@@ -267,7 +259,7 @@ export default function CompleteProfile() {
               </div>
             </div>
 
-            {/* Skills */}
+            {/* skills tag section */}
             <div className="mb-10">
               <label className="block text-neutral-700 text-lg font-semibold mb-3">Skills & Services</label>
               <div className="flex flex-wrap gap-2 mb-4">
@@ -302,7 +294,7 @@ export default function CompleteProfile() {
               </div>
             </div>
 
-            {/* Social Links */}
+            {/* social media links */}
             <div className="mb-10">
               <label className="block text-neutral-700 text-lg font-semibold mb-1">Contact / Social Links</label>
               <p className="text-neutral-500 text-sm mb-4">
@@ -324,27 +316,15 @@ export default function CompleteProfile() {
               </div>
             </div>
 
-            {/* Terms */}
-            <div className="mb-8">
-              <label className="flex items-start gap-3 cursor-pointer">
-                <input type="checkbox" checked={agreed} onChange={(e) => setAgreed(e.target.checked)}
-                  className="mt-1 w-5 h-5 rounded border-neutral-300" />
-                <span className="text-neutral-600 text-sm leading-relaxed">
-                  I agree to Verity's{' '}
-                  <a href="#" className="text-blue-600 hover:underline">Terms of Service</a>{' '}
-                  and{' '}
-                  <a href="#" className="text-blue-600 hover:underline">Privacy Policy</a>.
-                </span>
-              </label>
-            </div>
 
-            {/* Submit */}
+            {/* submit button */}
             <button type="button" onClick={handleSubmit}
-              disabled={!agreed || saving}
+              disabled={saving}
               className="w-full py-4 text-white rounded-xl text-lg font-semibold transition-all"
               style={{
-                background: agreed && !saving ? 'linear-gradient(135deg, #0047AB 0%, #6A0DAD 100%)' : '#d4d4d4',
-                cursor: agreed && !saving ? 'pointer' : 'not-allowed',
+                background: saving ? '#d4d4d4' : 'linear-gradient(135deg, #0047AB 0%, #6A0DAD 100%)',
+                cursor: saving ? 'not-allowed' : 'pointer',
+                
               }}>
               {saving ? (
                 <><i className="fa-solid fa-spinner fa-spin mr-2" />Saving...</>

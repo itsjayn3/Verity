@@ -10,17 +10,20 @@ import ProtectedRoute from "./components/auth/ProtectedRoute";
 import LeaveReview from "./pages/LeaveReview";
 import ProfileSettings from "./pages/ProfileSettings";
 import PostService from "./pages/PostService";
+import Footer from "./components/layout/Footer";
+import AboutPage from "./pages/AboutPage";
+import FAQsPage from "./pages/FAQsPage";
+import ContactPage from "./pages/ContactPage";
 
 export default function App() {
-  const [session, setSession] = useState(undefined); // undefined = still loading
+  const [session, setSession] = useState(undefined); 
 
   useEffect(() => {
-    // Get session once on mount
     supabase.auth.getSession().then(({ data }) => {
       setSession(data.session ?? null);
     });
 
-    // Keep session in sync across the whole app
+    // session in sync across the whole site
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (_event, sess) => {
         setSession(sess ?? null);
@@ -30,7 +33,7 @@ export default function App() {
     return () => subscription.unsubscribe();
   }, []);
 
-  // Show loading spinner while session is being determined — only once on app load
+  // show loading spinner while waiting 
   if (session === undefined) {
     return (
       <div
@@ -48,7 +51,7 @@ export default function App() {
   return (
     <BrowserRouter>
       <Routes>
-        {/* Public routes */}
+        {/* public routes */}
         <Route path="/" element={<LandingPage />} />
         <Route path="/auth" element={<AuthPage />} />
 
@@ -64,7 +67,7 @@ export default function App() {
           </ProtectedRoute>
         } />
         
-        {/* Complete profile */}
+        {/* CompleteProfile */}
         <Route
           path="/complete-profile"
           element={
@@ -74,7 +77,7 @@ export default function App() {
           }
         />
 
-        {/* Services / Campus Feed */}
+        {/* CampusFeed */}
         <Route
           path="/services"
           element={
@@ -84,7 +87,7 @@ export default function App() {
           }
         />
 
-        {/* Profile view */}
+        {/* ProfileView */}
         <Route
           path="/profile/:id"
           element={
@@ -94,7 +97,7 @@ export default function App() {
           }
         />
 
-        {/* Leave a review */}
+        {/* leaving a review */}
         <Route
           path="/review/:userId"
           element={
@@ -103,10 +106,12 @@ export default function App() {
             </ProtectedRoute>
           }
         />
-
-        {/* Fallback */}
+        <Route path="/about" element={<AboutPage />} />
+        <Route path="/faqs" element={<FAQsPage />} />
+        <Route path="/contact" element={<ContactPage />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
+       <Footer /> 
     </BrowserRouter>
   );
 }
