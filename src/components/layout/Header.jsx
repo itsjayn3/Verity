@@ -136,8 +136,16 @@ export default function Header() {
 
         {/* phone menu */}
         {menuOpen && (
+
           <div className="md:hidden pb-4 flex flex-col space-y-3 border-t border-white/10 pt-4">
             {NAV_LINKS.map(({ label, path }) => (
+
+          <div className="md:hidden pb-4 flex flex-col space-y-3">
+            {[
+              { label: 'Feed', path: '/services' },
+              { label: 'Post a Service', path: '/post-service' },
+            ].map(({ label, path }) => (
+
               <Link
                 key={path}
                 to={path}
