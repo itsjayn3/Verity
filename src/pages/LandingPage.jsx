@@ -190,7 +190,7 @@ export default function LandingPage() {
               backgroundClip: 'text',
             }}
           >
-            Welcome to<br />Verity.
+            Welcome to Verity
           </h1>
 
           <p className="text-xl text-white/80 mb-4 max-w-xl mx-auto">
