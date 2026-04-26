@@ -1,7 +1,3 @@
-// PostService.jsx
-// Authenticated users post a new service to the Campus Feed
-// Saves to Supabase services table with provider_id, zone, category etc.
-
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
@@ -27,7 +23,7 @@ export default function PostService() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
 
-  // Form fields
+  // form entry fields
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [category, setCategory] = useState('');
@@ -83,8 +79,6 @@ export default function PostService() {
   return (
     <div className="min-h-screen bg-neutral-100">
       <Header />
-
-      {/* ── Hero ── */}
       <section
         className="relative pt-24 pb-12 px-4 sm:px-6 lg:px-8"
         style={{ background: 'linear-gradient(135deg, #0047AB 0%, #6A0DAD 50%, #1E1E2E 100%)' }}
@@ -95,12 +89,12 @@ export default function PostService() {
           <p className="text-white/50 text-xs uppercase tracking-widest mb-3">Campus Feed</p>
           <h1 className="text-4xl text-white font-light tracking-wide mb-2">Post a Service</h1>
           <p className="text-white/60 text-sm">
-            Share what you're offering with the verified Aston community
+            Share what you're offering with the Aston community
           </p>
         </div>
       </section>
 
-      {/* ── Form ── */}
+      {/* form */}
       <section
         className="py-12 px-4 sm:px-6 lg:px-8"
         style={{ background: 'linear-gradient(to right, #690DAB 0%, #decfe8 100%)' }}
@@ -115,7 +109,6 @@ export default function PostService() {
               </div>
             )}
 
-            {/* ── Title ── */}
             <div className="mb-6">
               <label className="block text-neutral-700 font-semibold text-sm mb-2">
                 Service Title <span className="text-red-400">*</span>
@@ -132,7 +125,7 @@ export default function PostService() {
               </div>
             </div>
 
-            {/* ── Description ── */}
+            {/* description of service */}
             <div className="mb-6">
               <label className="block text-neutral-700 font-semibold text-sm mb-2">
                 Description <span className="text-red-400">*</span>
@@ -150,7 +143,7 @@ export default function PostService() {
               </div>
             </div>
 
-            {/* ── Category ── */}
+            {/* category*/}
             <div className="mb-6">
               <label className="block text-neutral-700 font-semibold text-sm mb-2">
                 Category <span className="text-red-400">*</span>
@@ -182,7 +175,7 @@ export default function PostService() {
               )}
             </div>
 
-            {/* ── Zone ── */}
+            {/* loaction tag */}
             <div className="mb-6">
               <label className="block text-neutral-700 font-semibold text-sm mb-2">
                 Service Location <span className="text-red-400">*</span>
@@ -210,7 +203,6 @@ export default function PostService() {
               </div>
             </div>
 
-            {/* ── Specific Location ── */}
             <div className="mb-6">
               <label className="block text-neutral-700 font-semibold text-sm mb-2">
                 Specific Location <span className="text-neutral-400 font-normal">(optional)</span>
@@ -227,13 +219,13 @@ export default function PostService() {
               </div>
             </div>
 
-            {/* ── Price ── */}
+            {/* pricing option  */}
             <div className="mb-8">
               <label className="block text-neutral-700 font-semibold text-sm mb-2">
                 Price <span className="text-neutral-400 font-normal">(optional)</span>
               </label>
 
-              {/* Free toggle */}
+              {/* make the service free */}
               <label className="flex items-center gap-3 mb-3 cursor-pointer">
                 <div
                   onClick={() => { setIsFree(!isFree); setPrice(''); }}
@@ -264,7 +256,7 @@ export default function PostService() {
               )}
             </div>
 
-            {/* ── Submit ── */}
+            {/* submit button */}
             <div className="flex flex-col sm:flex-row gap-3">
               <button
                 onClick={handleSubmit}
