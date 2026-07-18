@@ -63,7 +63,7 @@ export default function AboutPage() {
           <div className="bg-neutral-100 rounded-3xl p-8 border border-neutral-300">
             <h2 className="text-neutral-800 text-2xl font-light mb-4">The Research Behind Verity</h2>
             <p className="text-neutral-600 leading-relaxed">
-              Verity was developed as part of a final year Computer Science project at Aston University, exploring how trust mechanisms can be embedded into peer-to-peer platforms. <br/> The Trust Orb — the visual reputation indicator on every profile — is grounded in research into peer review systems, identity verification and cognitive trust signals.
+              Verity was developed as part of a final year Computer Science project at Aston University, exploring how trust mechanisms can be embedded into peer-to-peer platforms. <br/> The Trust Orb:  visual reputation indicator on every profile. This is grounded in research into peer review systems, identity verification and cognitive trust signals.
             </p>
             <p className="text-neutral-600 leading-relaxed mt-4">
               The platform was designed using a User-Centred Design approach, with wireframe evaluation surveys conducted with university students to ensure the interface is intuitive and the trust indicators are meaningful.

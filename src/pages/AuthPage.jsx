@@ -98,7 +98,7 @@ export default function AuthPage() {
 
   return (
     <div className="min-h-screen flex">
-      // css styling
+    
       <div
         className="hidden lg:flex lg:w-1/2 relative overflow-hidden flex-col justify-center items-center text-center text-white p-12"
         style={{ background: 'linear-gradient(135deg, #0047AB 0%, #6A0DAD 60%, #1E1E2E 100%)' }}
